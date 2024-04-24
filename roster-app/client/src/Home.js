@@ -1,18 +1,22 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import './Home.css';
 
 const HomePage = () => {
     return (
-        <body>
+        <div className="home-layout">
+            <div className="home-logo">
+                <img src="./logo.png" alt="logo" className='home-logo-img' />
+            </div>
             <div className="home-container">
-                <h1>Welcome to Flight Roster Application</h1>
+                <h2>WELCOME TO FLIGHT ROSTER APPLICATION</h2>
                 <p>This application helps you manage flight rosters easily.</p>
-                <div className="buttons">
-                    <a href="/login" className="login-button">Log In</a>
-                    <a href="/signup" className="signup-button">Sign Up</a>
+                <div className="home-buttons">
+                    <Link to="/login" className="home-button">Log In</Link>
+                    <Link to="/signup" className="home-button">Sign Up</Link>
                 </div>
             </div>
-        </body>
+        </div>
     );
 };
 
