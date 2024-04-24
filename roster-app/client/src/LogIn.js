@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import './LogIn.css';
+
 const LoginPage = () => {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
@@ -34,9 +36,12 @@ const LoginPage = () => {
                             onChange={(e) => setPassword(e.target.value)}
                         />
                     </div>
-                    <button type="submit">Login</button>
+                    <Link to="/dashboard">
+                        <button type="submit">Login</button>
+                    </Link>
                 </form>
                 <a href="/forgot-password">Forgot Password?</a>
+                <a href="/signup">Don't have an account?</a>
             </div>
         </body>
     );
