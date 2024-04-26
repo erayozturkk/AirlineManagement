@@ -4,7 +4,7 @@ import LogInPage from './LogIn.js';
 import SignUpPage from './SignUp.js';
 import HomePage from './Home.js';
 import ForgotPasswordPage from './ForgotPassword.js';
-import PassengerDashboard from './PassengerDashboard.js'; // Renamed from UserDashboard
+import PassengerDashboard from './PassengerDashboard.js';
 import CrewDashboard from './CrewDashboard.js';
 import AdminDashboard from './AdminDashboard.js';
 import { UserContext } from './UserContext.js'; // You'll need to create this

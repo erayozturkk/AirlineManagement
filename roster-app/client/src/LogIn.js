@@ -61,9 +61,7 @@ const LoginPage = () => {
                             required
                         />
                     </div>
-                    <Link to="/dashboard">
-                        <button type="submit">Login</button>
-                    </Link>
+                    <button type="submit">Login</button>
                 </form>
                 <a href="/forgot-password">Forgot Password?</a>
                 <a href="/signup">Don't have an account?</a>
@@ -73,4 +71,3 @@ const LoginPage = () => {
 };
 
 export default LoginPage;
-
