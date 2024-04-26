@@ -1,26 +1,27 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import LogInPage from './LogIn.js';
-import SignUpPage from './SignUp.js';
-import HomePage from './Home.js';
-import ForgotPasswordPage from './ForgotPassword.js';
-import PassengerDashboard from './PassengerDashboard.js';
-import CrewDashboard from './CrewDashboard.js';
-import AdminDashboard from './AdminDashboard.js';
-import { UserContext } from './UserContext.js'; // You'll need to create this
+import { useUser } from './UserContext'; // Import the hook
+import LogInPage from './LogIn';
+import SignUpPage from './SignUp';
+import HomePage from './Home';
+import ForgotPasswordPage from './ForgotPassword';
+import DashboardPassenger from './DashboardPassenger';
+import DashboardCrew from './DashboardCrew';
+import DashboardAdmin from './DashboardAdmin';
 
 function App() {
-    // This state would ideally come from your global state/context
-    const { userType } = React.useContext(UserContext);
+    const { user } = useUser();  // Use the user from context
 
     const getDashboard = () => {
-        switch (userType) {
-            case 'user':
-                return <PassengerDashboard />; // Updated to new component name
+        if (!user) return <Navigate to="/login" />;
+        
+        switch (user.userType) {
+            case 'passenger':
+                return <DashboardPassenger />;
             case 'admin':
-                return <AdminDashboard />;
+                return <DashboardAdmin />;
             case 'crew':
-                return <CrewDashboard />;
+                return <DashboardCrew />;
             default:
                 return <Navigate to="/login" />;
         }
@@ -34,7 +35,6 @@ function App() {
                 <Route path="/signup" element={<SignUpPage />} />
                 <Route path="/forgot-password" element={<ForgotPasswordPage />} />
                 <Route path="/dashboard" element={getDashboard()} />
-                {/* Add more Route components here for additional pages */}
             </Routes>
         </BrowserRouter>
     );

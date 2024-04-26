@@ -1,0 +1,71 @@
+.dashboard {
+    background-color: #e8e8e8;
+    padding-bottom: 20px;
+    min-height: 100vh;
+    width: 212.5%;
+}
+
+.navbar {
+    background-color: #0468BF;
+    display: flex;
+    justify-content: center;
+    padding: 10px 0;
+}
+
+.nav-item {
+    color: white;
+    padding: 10px 20px;
+    text-decoration: none;
+    margin: 0 10px;
+    border-radius: 8px;
+    transition: background-color 0.3s ease;
+}
+
+.nav-item:hover {
+    background-color: #0056b3;
+}
+
+.header {
+    text-align: center;
+    padding: 20px 0;
+}
+
+.menu {
+    display: flex;
+    justify-content: space-around;
+    margin: 20px 0;
+}
+
+.menu-item {
+    background-color: #0468BF;
+    color: white;
+    padding: 20px;
+    border-radius: 8px;
+    width: 30%;
+    height: 200px;
+    text-align: center;
+    cursor: pointer;
+}
+
+.menu-item:hover {
+    background-color: #0056b3;
+}
+
+.content {
+    display: flex;
+    justify-content: space-between;
+}
+
+.upcoming-flights, .notifications {
+    background-color: white;
+    padding: 30px;
+    border-radius: 8px;
+    width: 45%;
+    margin-left: 10px;
+    margin-right: 10px;
+    
+}
+
+h2 {
+    color: #0455BF;
+}

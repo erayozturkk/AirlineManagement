@@ -1,16 +1,19 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom'; // Import useNavigate for redirection
 import './SignUp.css';
 
 const SignUpPage = () => {
     const [userData, setUserData] = useState({
         username: '',
-        email: '', // Assuming you'll add an email field
+        email: '',
         password: '',
-        confirmPassword: ''
+        confirmPassword: '',
+        userType: 'passenger' // Set default userType to 'passenger'
     });
 
     const { username, email, password, confirmPassword } = userData;
+    const navigate = useNavigate(); // Hook for navigation
 
     const handleChange = (e) => {
         setUserData({ ...userData, [e.target.name]: e.target.value });
@@ -19,7 +22,6 @@ const SignUpPage = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (password !== confirmPassword) {
-            // Handle password mismatch
             console.error("Passwords don't match!");
             return;
         }
@@ -29,12 +31,23 @@ const SignUpPage = () => {
                     'Content-Type': 'application/json'
                 }
             };
-            const body = JSON.stringify({ username, email, password }); // Assuming you want to include the email
-            const response = await axios.post('http://localhost:5001/api/auth/register', body, config);
-            console.log(response.data); // Handle success response
-            // Redirect user or show success message
+            const body = JSON.stringify({ username, email, password, userType: userData.userType });
+            const registerResponse = await axios.post('http://localhost:5001/api/auth/register', body, config);
+
+            if (registerResponse.status === 201) {
+                // Perform login after successful registration
+                const loginResponse = await axios.post('http://localhost:5001/api/auth/login', { username, password }, config);
+                
+                if (loginResponse.status === 200) {
+                    console.log('Sign up & Login successful:', loginResponse.data);
+                    // Assuming you store the token in localStorage or context
+                    localStorage.setItem('token', loginResponse.data.token);
+                    
+                    navigate('/dashboard'); // Redirect to the dashboard
+                }
+            }
         } catch (err) {
-            console.error(err.response.data); // Handle errors
+            console.error('Registration Error:', err.response ? err.response.data : err);
         }
     };
 
@@ -50,9 +63,10 @@ const SignUpPage = () => {
                         <input
                             type="text"
                             placeholder="Username"
+                            name="username"
                             value={username}
                             onChange={handleChange}
-                            />
+                        />
                     </div>
                     <div className="input-group">
                         <input
@@ -67,17 +81,19 @@ const SignUpPage = () => {
                         <input
                             type="password"
                             placeholder="Password"
+                            name="password"
                             value={password}
                             onChange={handleChange}
-                            />
+                        />
                     </div>
                     <div className="input-group">
                         <input
                             type="password"
                             placeholder="Confirm Password"
+                            name="confirmPassword"
                             value={confirmPassword}
                             onChange={handleChange}
-                            />
+                        />
                     </div>
                     <button type="submit">Sign Up</button>
                 </form>

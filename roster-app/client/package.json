@@ -40,5 +40,8 @@
   "overrides": {
     "nth-check": "^2.0.1",
     "postcss": "^8.4.38"
+  },
+  "devDependencies": {
+    "eslint-plugin-jsx-a11y": "^6.8.0"
   }
 }

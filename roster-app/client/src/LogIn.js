@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import { useUser } from './UserContext'; 
 import './LogIn.css';
 
 const LoginPage = () => {
@@ -9,7 +10,15 @@ const LoginPage = () => {
         password: ''
     });
 
+    const { user, setUser } = useUser(); // Include user for debugging
     const navigate = useNavigate();
+
+    useEffect(() => {
+        if (user) {
+            console.log("User state after update:", user); // Log user state after update
+            navigate('/dashboard');
+        }
+    }, [user, navigate]);
 
     const handleChange = (e) => {
         setCredentials({ ...credentials, [e.target.name]: e.target.value });
@@ -25,14 +34,21 @@ const LoginPage = () => {
             };
             const body = JSON.stringify(credentials);
             const response = await axios.post('http://localhost:5001/api/auth/login', body, config);
-            console.log(response.data); // Handle success response
-            // TODO: Save the received token to local storage or context/state
-            navigate('/dashboard'); // Navigate to the dashboard upon successful login
+            console.log("Login response data:", response.data); // Log the response data
+            
+            setUser({
+                token: response.data.token,
+                userDetails: response.data.userDetails
+            });
+
+            localStorage.setItem('user', JSON.stringify({
+                token: response.data.token,
+                userDetails: response.data.userDetails
+            }));
         } catch (err) {
-            console.error(err.response.data); // Handle errors
+            console.error("Login error:", err.response.data); // Log the error
         }
     };
-
     return (
         <body>
             <div className="login-logo">
@@ -64,7 +80,7 @@ const LoginPage = () => {
                     <button type="submit">Login</button>
                 </form>
                 <a href="/forgot-password">Forgot Password?</a>
-                <a href="/signup">Don't have an account?</a>
+                <a href="/signup">Don't have an account? Sign up here</a>
             </div>
         </body>
     );
