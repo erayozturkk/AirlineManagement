@@ -1,15 +1,36 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 import './LogIn.css';
 
 const LoginPage = () => {
-    const [username, setUsername] = useState('');
-    const [password, setPassword] = useState('');
+    const [credentials, setCredentials] = useState({
+        username: '',
+        password: ''
+    });
 
-    const handleSubmit = (e) => {
+    const navigate = useNavigate();
+
+    const handleChange = (e) => {
+        setCredentials({ ...credentials, [e.target.name]: e.target.value });
+    };
+
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        // Handle login logic here
-        console.log(username, password);
+        try {
+            const config = {
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            };
+            const body = JSON.stringify(credentials);
+            const response = await axios.post('http://localhost:5001/api/auth/login', body, config);
+            console.log(response.data); // Handle success response
+            // TODO: Save the received token to local storage or context/state
+            navigate('/dashboard'); // Navigate to the dashboard upon successful login
+        } catch (err) {
+            console.error(err.response.data); // Handle errors
+        }
     };
 
     return (
@@ -24,16 +45,20 @@ const LoginPage = () => {
                         <input
                             type="text"
                             placeholder="Username"
-                            value={username}
-                            onChange={(e) => setUsername(e.target.value)}
+                            name="username"
+                            value={credentials.username}
+                            onChange={handleChange}
+                            required
                         />
                     </div>
                     <div className="input-group">
                         <input
                             type="password"
                             placeholder="Password"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
+                            name="password"
+                            value={credentials.password}
+                            onChange={handleChange}
+                            required
                         />
                     </div>
                     <Link to="/dashboard">
