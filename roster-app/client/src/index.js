@@ -1,6 +1,15 @@
 import React from 'react';
-import ReactDOM from 'react-dom';
-
+import { createRoot } from 'react-dom/client';  // Import createRoot
 import App from './App';
+import { UserProvider } from './UserContext';  // Import UserProvider
 
-ReactDOM.render(<App />, document.getElementById('root'));
+const container = document.getElementById('root'); // Get the container to mount your app
+const root = createRoot(container); // Create a root
+
+root.render(
+    <React.StrictMode>
+        <UserProvider>
+            <App />
+        </UserProvider>
+    </React.StrictMode>
+);
