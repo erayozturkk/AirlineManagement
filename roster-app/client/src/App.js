@@ -1,6 +1,6 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { useUser } from './UserContext'; // Import the hook
+import { useUser } from './UserContext';
 import LogInPage from './LogIn';
 import SignUpPage from './SignUp';
 import HomePage from './Home';
@@ -10,12 +10,16 @@ import DashboardCrew from './DashboardCrew';
 import DashboardAdmin from './DashboardAdmin';
 
 function App() {
-    const { user } = useUser();  // Use the user from context
+    const { user } = useUser();
 
     const getDashboard = () => {
-        if (!user) return <Navigate to="/login" />;
-        
-        switch (user.userType) {
+        console.log("Current user:", user); // Debug: Check the user data
+        if (!user || !user.userDetails) {
+            console.log("Redirecting to login, no user data available.");
+            return <Navigate to="/login" />;
+        }
+
+        switch (user.userDetails.userType) {
             case 'passenger':
                 return <DashboardPassenger />;
             case 'admin':
@@ -23,6 +27,7 @@ function App() {
             case 'crew':
                 return <DashboardCrew />;
             default:
+                console.log("User type not recognized, redirecting to login.");
                 return <Navigate to="/login" />;
         }
     };
