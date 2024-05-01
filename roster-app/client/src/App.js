@@ -38,6 +38,7 @@ function App() {
                 <Route path="/" element={<HomePage />} />
                 <Route path="/login" element={<LogInPage />} />
                 <Route path="/signup" element={<SignUpPage />} />
+                <Route path="/DashBoardA" element={<DashboardAdmin />} />
                 <Route path="/forgot-password" element={<ForgotPasswordPage />} />
                 <Route path="/dashboard" element={getDashboard()} />
             </Routes>
