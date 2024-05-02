@@ -15,21 +15,36 @@ const { CabinCrew, commonLanguages, recipes, aircrafts } = require('./CabinCrew'
 // POST route to add a new crew member
 app.post('/add-crew-member', async (req, res) => {
   try {
-    // Create a new crew member object from the request body
+    // Get the last ID from the database
+    const { data: lastCrewMember, error: lastCrewMemberError } = await supabase
+      .from('cabincrewmembers')
+      .select('attendantid')
+      .order('attendantid', { ascending: false })
+      .limit(1);
+
+    if (lastCrewMemberError) {
+      throw lastCrewMemberError;
+    }
+
+    // Calculate the next available ID
+    const nextId = lastCrewMember ? lastCrewMember[0].attendantid + 1 : 1;
+
+    // Create a new crew member object with the next available ID
     const newCrewMember = CabinCrew.generateRandom();
+    newCrewMember.attendantid = nextId;
 
     // Insert the crew member into the Supabase table
-    const { data, error } = await supabase
+    const { data: insertedCrewMember, error: insertError } = await supabase
       .from('cabincrewmembers')
       .insert(newCrewMember);
 
-    if (error) {
-      throw error;
+    if (insertError) {
+      throw insertError;
     }
 
-    res.status(201).json({ message: 'Crew member added successfully', crewMember: newCrewMember });
+    res.status(201).json({ message: 'Crew member added successfully', crewMember: insertedCrewMember });
   } catch (error) {
-    console.error('Error adding crew member:', error.message); // Log the error message
+    console.error('Error adding crew member:', error.message);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
