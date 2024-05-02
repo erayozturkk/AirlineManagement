@@ -13,7 +13,7 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 const { CabinCrew, commonLanguages, recipes, aircrafts } = require('./CabinCrew')
 
 // POST route to add a new crew member
-app.post('/crew-members', async (req, res) => {
+app.post('/add-crew-member', async (req, res) => {
   try {
     // Create a new crew member object from the request body
     const newCrewMember = CabinCrew.generateRandom();
@@ -27,12 +27,32 @@ app.post('/crew-members', async (req, res) => {
       throw error;
     }
 
-    res.status(201).json({ message: 'Crew member added successfully', crewMember: data });
+    res.status(201).json({ message: 'Crew member added successfully', crewMember: newCrewMember });
   } catch (error) {
     console.error('Error adding crew member:', error.message); // Log the error message
     res.status(500).json({ error: 'Internal server error' });
   }
 });
+
+app.get('/get-crew-members', async (req, res) => {
+  try {
+    // Fetch a random crew member from Supabase
+    const { data, error } = await supabase
+      .from('cabincrewmembers')
+      .select('*')
+      .limit(4);
+
+    if (error) {
+      throw error;
+    }
+
+    res.json({ message: 'Supabase connected successfully', CrewMembers: data });
+  } catch (error) {
+    console.error('Supabase connection error:', error.message);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 
 // Define routes
 app.get('/', (req, res) => {
