@@ -11,7 +11,7 @@ const recipes = [
     "beef stew", "enchiladas"
 ];
 const commonLanguages = [
-    "English", "Spanish", "Mandarin", "Hindi", "Arabic",
+    "Spanish", "Mandarin", "Hindi", "Arabic",
     "Bengali", "French", "Russian", "Portuguese", "Urdu",
     "German", "Japanese", "Swahili", "Korean", "Italian",
     "Turkish", "Dutch", "Polish", "Vietnamese", "Thai"
@@ -100,6 +100,9 @@ class CabinCrew {
 
     setAttendanttype(attendanttype) {
         this.attendanttype = attendanttype;
+        if (attendanttype === "chef") {
+            this.recipes = faker.random.arrayElements(recipes, faker.datatype.number({ min: 2, max: 4 }));
+        }
     }
 
     setVehiclerestriction(vehiclerestriction) {
@@ -116,8 +119,8 @@ class CabinCrew {
         const age = faker.datatype.number({ min: 18, max: 60 });
         const gender = faker.random.arrayElement(["Male", "Female"]);
         const nationality = faker.address.country();
-        const languages = faker.random.arrayElements(commonLanguages, faker.datatype.number({ min: 2, max: 2 }));
-        const attendanttype = faker.random.arrayElement(["chief", "assistant", "chef"]);
+        const languages = [ 'English', ...faker.random.arrayElements(commonLanguages, faker.datatype.number({ min: 1, max: 1 })) ];
+        const attendanttype = faker.random.arrayElement(["chief", "regular", "chef"]);
         const vehiclerestriction = faker.random.arrayElements(aircrafts, faker.datatype.number({ min: 2, max: 2 }));
         let assignedRecipes = [];
 
@@ -134,4 +137,5 @@ class CabinCrew {
 }
 
 module.exports = { CabinCrew, commonLanguages, recipes, aircrafts };
+
 
