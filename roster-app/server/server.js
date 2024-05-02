@@ -4,7 +4,7 @@ const { createClient } = require('@supabase/supabase-js');
 const bodyParser = require('body-parser');
 
 const FlightInfoRouter = require('./routes/Flight_Info');
-const CabinCrewAPI = require('./routes/Cabin_Crew_API');
+const CabinCrewRouter = require('./routes/Cabin_Crew_API');
 
 // Initialize Express app
 const app = express();
@@ -19,7 +19,7 @@ app.use(bodyParser.urlencoded({ extended: false }));
 
 // parse application/json
 app.use(bodyParser.json());
-const { CabinCrew, commonLanguages, recipes, aircrafts } = require('./CabinCrew')
+
 
 
 
@@ -47,13 +47,9 @@ app.get('/test-supabase', async (req, res) => {
   }
 });
 
-//Crew member APIs
-app.post('/add-crew-member', CabinCrewAPI.addCrewMember);
-app.get('/get-crew-members', CabinCrewAPI.getCrewMembers);
-app.get('/find-crew-members', CabinCrewAPI.findCrewMembers);
 
-
-
+const cabinCrewRouter = CabinCrewRouter(supabaseKey);
+app.use('/cabin-crew', cabinCrewRouter);
 //FLight Info Rout...
 const flightInfoRouter = FlightInfoRouter(supabaseKey);
 app.use('/flight-info', flightInfoRouter);
