@@ -1,3 +1,4 @@
+require('dotenv').config(); // Load environment variables from .env file
 const express = require('express');
 const { createClient } = require('@supabase/supabase-js');
 
@@ -5,18 +6,22 @@ const { createClient } = require('@supabase/supabase-js');
 const app = express();
 
 // Initialize Supabase client
-const supabaseUrl = 'https://hsixajfgpamanbqvxyyw.supabase.co';
-const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhzaXhhamZncGFtYW5icXZ4eXl3Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTcxMTA0Mjk1NiwiZXhwIjoyMDI2NjE4OTU2fQ.NVg9rnK4MAZA8x-iom4sigQXbDqb-nKJh9e8SwZPw0A';
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_KEY;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-// Define a route handler for the /test-supabase endpoint
+// Define routes
+app.get('/', (req, res) => {
+  res.send('Welcome to the homepage');
+});
+
 app.get('/test-supabase', async (req, res) => {
   try {
     // Test connection by fetching aircraft data
     const { data, error } = await supabase
       .from('aircrafts')
       .select('*')
-      .limit(1);
+      .limit(5);
 
     if (error) {
       throw error;
