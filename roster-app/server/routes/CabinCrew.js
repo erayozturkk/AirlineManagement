@@ -18,7 +18,7 @@ const commonLanguages = [
     // Add more languages as needed
 ];
 const aircrafts = [
-    "A320", "A330", "A380", "B777", "B787"
+    "Airbus A320", "Airbus A330", "Airbus A380", "Boeing 777", "Boeing 787"
 ];
 
 
