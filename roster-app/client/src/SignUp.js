@@ -37,12 +37,12 @@ const SignUpPage = () => {
             if (registerResponse.status === 201) {
                 // Perform login after successful registration
                 const loginResponse = await axios.post('http://localhost:5001/api/auth/login', { username, password }, config);
-                
+
                 if (loginResponse.status === 200) {
                     console.log('Sign up & Login successful:', loginResponse.data);
                     // Assuming you store the token in localStorage or context
                     localStorage.setItem('token', loginResponse.data.token);
-                    
+
                     navigate('/dashboard'); // Redirect to the dashboard
                 }
             }
@@ -52,52 +52,54 @@ const SignUpPage = () => {
     };
 
     return (
-        <body>
-            <div className="login-logo">
-                <img src="./logo.png" alt="logo" className='login-logo' />
+        <body className='signup-page'>
+            <div className="signup-logo">
+                <img src="./logo.png" alt="logo" />
             </div>
-            <div className="login-container">
-                <h2>FLIGHT ROSTER APPLICATION</h2>
-                <form onSubmit={handleSubmit}>
-                    <div className="input-group">
-                        <input
-                            type="text"
-                            placeholder="Username"
-                            name="username"
-                            value={username}
-                            onChange={handleChange}
-                        />
-                    </div>
-                    <div className="input-group">
-                        <input
-                            type="text"
-                            placeholder="Email"
-                            name="email"
-                            value={email}
-                            onChange={handleChange}
-                        />
-                    </div>
-                    <div className="input-group">
-                        <input
-                            type="password"
-                            placeholder="Password"
-                            name="password"
-                            value={password}
-                            onChange={handleChange}
-                        />
-                    </div>
-                    <div className="input-group">
-                        <input
-                            type="password"
-                            placeholder="Confirm Password"
-                            name="confirmPassword"
-                            value={confirmPassword}
-                            onChange={handleChange}
-                        />
-                    </div>
-                    <button type="submit">Sign Up</button>
-                </form>
-                <a href="/login">Already have an account? Log in here</a>
+            <div className="signup-container">
+                <div className="signup-form">
+                    <h2>FLIGHT ROSTER APPLICATION</h2>
+                    <form onSubmit={handleSubmit}>
+                        <div className="input-group">
+                            <input
+                                type="text"
+                                placeholder="Username"
+                                name="username"
+                                value={username}
+                                onChange={handleChange}
+                            />
+                        </div>
+                        <div className="input-group">
+                            <input
+                                type="text"
+                                placeholder="Email"
+                                name="email"
+                                value={email}
+                                onChange={handleChange}
+                            />
+                        </div>
+                        <div className="input-group">
+                            <input
+                                type="password"
+                                placeholder="Password"
+                                name="password"
+                                value={password}
+                                onChange={handleChange}
+                            />
+                        </div>
+                        <div className="input-group">
+                            <input
+                                type="password"
+                                placeholder="Confirm Password"
+                                name="confirmPassword"
+                                value={confirmPassword}
+                                onChange={handleChange}
+                            />
+                        </div>
+                        <button type="submit" id='signupbutton'>Sign Up</button>
+                    </form>
+                    <a href="/login">Already have an account? Log in here</a>
+                </div>
             </div>
         </body>
     );

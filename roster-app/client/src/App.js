@@ -5,9 +5,8 @@ import LogInPage from './LogIn';
 import SignUpPage from './SignUp';
 import HomePage from './Home';
 import ForgotPasswordPage from './ForgotPassword';
-import DashboardPassenger from './DashboardPassenger';
-import DashboardCrew from './DashboardCrew';
 import DashboardAdmin from './DashboardAdmin';
+import ViewFlight from './viewFlight';
 
 function App() {
     const { user } = useUser();
@@ -20,12 +19,8 @@ function App() {
         }
 
         switch (user.userDetails.userType) {
-            case 'passenger':
-                return <DashboardPassenger />;
             case 'admin':
                 return <DashboardAdmin />;
-            case 'crew':
-                return <DashboardCrew />;
             default:
                 console.log("User type not recognized, redirecting to login.");
                 return <Navigate to="/login" />;
@@ -39,7 +34,8 @@ function App() {
                 <Route path="/login" element={<LogInPage />} />
                 <Route path="/signup" element={<SignUpPage />} />
                 <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-                <Route path="/dashboard" element={getDashboard()} />
+                <Route path="/dashboard" element={<DashboardAdmin />} />
+                <Route path="/viewFlight" element={<ViewFlight />} />
             </Routes>
         </BrowserRouter>
     );
