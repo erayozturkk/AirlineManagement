@@ -5,7 +5,8 @@ const bodyParser = require('body-parser');
 
 const FlightInfoRouter = require('./routes/Flight_Info');
 const CabinCrewRouter = require('./routes/Cabin_Crew_API');
-const FlightCrewRouter = require('./routes/Flight_Crew_API')
+const FlightCrewRouter = require('./routes/Flight_Crew_API');
+//const PassangerCrewRouter = require('./routes/Passanger_Info_API');
 
 // Initialize Express app
 const app = express();
@@ -56,7 +57,9 @@ const flightInfoRouter = FlightInfoRouter(supabaseKey);
 app.use('/flight-info', flightInfoRouter);
 const flightCrewRouter = FlightCrewRouter(supabaseKey);
 app.use('/flight-crew', flightCrewRouter);
-
+//Passanger info rout...
+//const passangerInfoRouter = PassangerCrewRouter(supabaseKey);
+//app.use('/passanger-info',passangerInfoRouter);
 
 
 // Start the server

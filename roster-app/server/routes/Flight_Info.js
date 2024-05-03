@@ -128,14 +128,24 @@ router.post('/add-flight-info', async (req, res) => {
       for (let i = 0; i < limitNumber; i++) {
 
 
-        //ganerate random flight number if not provided in request
+        // Generate random flight number if not provided in request
         let toinFlightNumber;
-        if(flight_num){
-          toinFlightNumber=flight_num;
+        if (flight_num) {
+          toinFlightNumber = flight_num;
+        } else {
+          const { data: flight_info, error: flight_infoError } = await supabase
+            .from('flight_info')
+            .select('flight_num');
+
+          if (flight_infoError) {
+            throw flight_infoError;
+          }
+
+          do {
+            toinFlightNumber = generateFlightNumber();
+          } while (flight_info.some(info => info.flight_num === toinFlightNumber));
         }
-        else{
-          toinFlightNumber = generateFlightNumber();
-        }
+
 
 
         //ganerate random date if not provided in request
@@ -301,11 +311,38 @@ router.post('/add-flight-info', async (req, res) => {
         else{
           toinVehicle = getRandomaircraft(aircrafts);
         }
-
+        async function checkForUnique(date, time, origin_airport_name, destination_airport_name) {
+          try {
+              // Convert date to GMT string for consistency
+              const gmtDateString = date.toISOString().split('T')[0];
+      
+              // Format time to ensure consistent format
+              const formattedTime = time.padStart(5, '0'); // Ensure time is in HH:MM format
+      
+              const { data: existingFlights, error: flight_infoError } = await supabase
+                  .from('flight_info')
+                  .select('*')
+                  .eq('date', gmtDateString)
+                  .eq('time', formattedTime)
+                  .eq('origin_airport_name', origin_airport_name)
+                  .eq('destination_airport_name', destination_airport_name);
+      
+              if (flight_infoError) {
+                  throw flight_infoError;
+              }
+      
+              return existingFlights.length === 0;
+          } catch (error) {
+              console.error('Error checking for unique flights:', error.message);
+              return false; // Return false to indicate an error occurred
+          }
+      }
+      
 
 
     
         // Insert the flight information into the Supabase table
+        if(checkForUnique(toinDate,toinTime,toinOriginairport['Airport Name'],toinDestinationairport['Airport Name'])){
         const { data: insertedFlightInfo, error: insertError } = await supabase
           .from('flight_info')
           .insert({
@@ -331,6 +368,10 @@ router.post('/add-flight-info', async (req, res) => {
           throw insertError;
         }
       }
+      else{
+        i--;
+      }
+    }
   
       res.status(201).json({ message: `Flight information added successfully for ${limitNumber} flights` });
     } catch (error) {
@@ -358,26 +399,29 @@ router.post('/add-flight-info', async (req, res) => {
     return `TK${randomNum}`;
   }
   
-  // Helper function to generate a random date between 03-05-2024:00.00 to 03-05-2026:23.59
-  function generateRandomDate() {
-    const start = new Date(2024, 4, 3, 0, 0); // 03-05-2024:00.00
-    const end = new Date(2026, 4, 3, 23, 59); // 03-05-2026:23.59
-    const randomTime = start.getTime() + Math.random() * (end.getTime() - start.getTime());
-    return new Date(randomTime);
-  }
-// Helper function to generate a random time between 00:00 and 23:59
+// Helper function to generate a random date between 03-05-2024:00.00 to 03-05-2026:23.59 in UTC format
+function generateRandomDate() {
+  const start = new Date(2024, 4, 3, 0, 0); // 03-05-2024:00.00 UTC
+  const end = new Date(2026, 4, 3, 23, 59); // 03-05-2026:23.59 UTC
+  const randomTime = start.getTime() + Math.random() * (end.getTime() - start.getTime());
+  return new Date(randomTime);
+}
+
+
+
+// Helper function to generate a random time in "HH:MM" format
 function generateRandomTime() {
-    const hours = Math.floor(Math.random() * 24); // Random hour between 0 and 23
-    const minutes = Math.floor(Math.random() * 60); // Random minute between 0 and 59
-    // Format the hour and minute to ensure they have leading zeros if needed
-    const formattedHours = hours < 10 ? `0${hours}` : `${hours}`;
-    const formattedMinutes = minutes < 10 ? `0${minutes}` : `${minutes}`;
-    return `${formattedHours}:${formattedMinutes}`;
-  }
-  
-    
-    return router;
-};
+  const hours = Math.floor(Math.random() * 24); // Random hour between 0 and 23
+  const minutes = Math.floor(Math.random() * 60); // Random minute between 0 and 59
+  // Format the hour and minute to ensure they have leading zeros if needed
+  const formattedHours = hours < 10 ? `0${hours}` : `${hours}`;
+  const formattedMinutes = minutes < 10 ? `0${minutes}` : `${minutes}`;
+  return `${formattedHours}:${formattedMinutes}`;
+}
 
 
 
+
+
+  return router;
+}
