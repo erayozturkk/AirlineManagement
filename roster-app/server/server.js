@@ -5,6 +5,7 @@ const bodyParser = require('body-parser');
 
 const FlightInfoRouter = require('./routes/Flight_Info');
 const CabinCrewRouter = require('./routes/Cabin_Crew_API');
+const FlightCrewRouter = require('./routes/Flight_Crew_API')
 
 // Initialize Express app
 const app = express();
@@ -53,6 +54,8 @@ app.use('/cabin-crew', cabinCrewRouter);
 //FLight Info Rout...
 const flightInfoRouter = FlightInfoRouter(supabaseKey);
 app.use('/flight-info', flightInfoRouter);
+const flightCrewRouter = FlightCrewRouter(supabaseKey);
+app.use('/flight-crew', flightCrewRouter);
 
 
 
