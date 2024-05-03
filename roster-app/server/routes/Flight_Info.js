@@ -103,100 +103,228 @@ module.exports = function createFlightInfoRouter(supabaseKey) {
     // POST route to add flight information
 router.post('/add-flight-info', async (req, res) => {
     try {
-      const { limit } = req.query;
+      const {
+        flight_num,
+        date,
+        time,
+        duration,
+        distance,
+        origin_airport_name,
+        vehicle_type,
+        destination_airport_name,
+        shared_flight_number,
+        shared_flight_company,
+        limit
+    } = req.query;
       
-      // Convert the limit parameter to a number
-      const limitNumber = limit ? parseInt(limit) : 5; // Default limit is 5 if not provided
+    let limitNumber;
+    if(limit){
+      limitNumber=parseInt(limit);
+    }
+    else{
+      limitNumber=5;
+    }
       
       for (let i = 0; i < limitNumber; i++) {
-        const flight_num = generateFlightNumber();
-        const date = generateRandomDate();
-        const time = generateRandomTime();
-        // Generate a random distance between 800 and 8000
-        const distance = Math.floor(Math.random() * (8000 - 800 + 1)) + 800;
-  
-        // Generate a random duration based on the distance
-        const distanceFactor = Math.floor(Math.random() * (575 - 480 + 1)) + 480;
-        const duration = Math.ceil(distance / distanceFactor) * 60;
-  
-        const shared = Math.random() < 0.2;
-  
-        let shared_flight_number = null;
-        let shared_flight_company = null;
-        if (shared) {
-          // List of airline companies and their codes
-          const airlines = [
-            { name: "Emirates", code: "EK" },
-            { name: "American Airlines", code: "AA" },
-            { name: "Lufthansa", code: "LH" },
-            { name: "British Airways", code: "BA" },
-            { name: "Delta Air Lines", code: "DL" },
-            { name: "Air France", code: "AF" },
-            { name: "Singapore Airlines", code: "SQ" },
-            { name: "Qantas Airways", code: "QF" },
-            { name: "Cathay Pacific Airways", code: "CX" }
-          ];
-        
-          // Randomly choose an airline company
-          const randomAirline = airlines[Math.floor(Math.random() * airlines.length)];
-        
-          // Generate a random 4-digit flight number
-          const flightNumber = Math.floor(1000 + Math.random() * 9000);
-        
-          shared_flight_number = `${randomAirline.code}${flightNumber}`;
-          shared_flight_company = randomAirline.name;
+
+
+        //ganerate random flight number if not provided in request
+        let toinFlightNumber;
+        if(flight_num){
+          toinFlightNumber=flight_num;
         }
-  
-        // Extract flight information from the request body
-       
-        
-        const{ data: aircrafts, error: aircraftError } = await supabase
-        .from('aircrafts')
-        .select('*');
-  
-        if(aircraftError) {
-          throw aircraftError;
+        else{
+          toinFlightNumber = generateFlightNumber();
         }
-        const vehicle_type = getRandomaircraft(aircrafts);
-        //select a random aircraft
-  
-  
+
+
+        //ganerate random date if not provided in request
+        let toinDate;
+        if(date){
+          toinDate=date;
+        }
+        else{
+          toinDate = generateRandomDate();
+        }
+
+
+        //ganerate random time if not provided in request
+        let toinTime;
+        if(time){
+          toinTime=time;
+        }
+        else{
+          toinTime = generateRandomTime();
+        }
+
+
+        //ganerate random duration if not provided in request
+        let toinDuration;
+        if(duration){
+          toinDuration=duration;
+        }
+        else{
+          // Generate a random distance between 800 and 8000
+          const distance = Math.floor(Math.random() * (8000 - 800 + 1)) + 800;
+          // Generate a random duration based on the distance theese values are expected speeds of a passanger plane
+          const distanceFactor = Math.floor(Math.random() * (575 - 480 + 1)) + 480;
+          toinDuration = Math.ceil(distance / distanceFactor) * 60;
+    
+        }
+
+        let toinDistance;
+        if(distance){
+          toinDistance=distance;
+        }
+        else{
+          // Generate a random distance between 800 and 8000
+           toinDistance = Math.floor(Math.random() * (8000 - 800 + 1)) + 800;
+        }
+
+
+        //ganerate random airport if not provided in request
+        let toinOriginairport;
+        let toinDestinationairport;
         // Fetch airports from Supabase
         const { data: airports, error: airportError } = await supabase
-          .from('airports')
-          .select('*');
-    
+        .from('airports')
+        .select('*');  
         if (airportError) {
           throw airportError;
         }
-    
-        // Randomly select origin and destination airports
-        const originAirport = getRandomAirport(airports);
-        let destinationAirport;
-        do {
-          destinationAirport = getRandomAirport(airports);
-        } while (destinationAirport['Airport Code'] === originAirport['Airport Code']);
+        if(origin_airport_name){
+        const matchedAirport = airports.find(airport => airport['Airport Name'] === origin_airport_name);
+        if(!matchedAirport){
+          throw new Error(`Origin airport "${origin_airport_name}" not found in the database.`);
+        }
+        else{
+          toinOriginairport=matchedAirport;
+        }
+        }
+        else{
+          toinOriginairport  = getRandomAirport(airports);;
+        }
+        if(destination_airport_name){
+          const matchedAirport = airports.find(airport => airport['Airport Name'] === destination_airport_name);
+          if(!matchedAirport){
+            throw new Error(`Origin airport "${destination_airport_name}" not found in the database.`);
+          }
+          else{
+            if(matchedAirport['Airport Name']===toinOriginairport['Airport Name']){
+              throw new Error(`Destination airport can not be same with the origin airport.`);
+            }
+            else{
+              toinDestinationairport = matchedAirport;
+            }
+          }
+        }
+        else{
+          do {
+            toinDestinationairport = getRandomAirport(airports);
+          } while (toinDestinationairport['Airport Code'] === toinOriginairport['Airport Code']);
+        }
+        
+        
+
+
+
+
+        //generate random shared flight company and shared flight number from a array if it is not provided in request 
+        //if Shared flight company is provided but there is no flight number create a random flight number starting with first two letters of that company name
+        let toinSharedflightcompany;
+        let toinSharedflightnumber;
+        const airlines = [
+          { name: "Emirates", code: "EK" },
+          { name: "American Airlines", code: "AA" },
+          { name: "Lufthansa", code: "LH" },
+          { name: "British Airways", code: "BA" },
+          { name: "Delta Air Lines", code: "DL" },
+          { name: "Air France", code: "AF" },
+          { name: "Singapore Airlines", code: "SQ" },
+          { name: "Qantas Airways", code: "QF" },
+          { name: "Cathay Pacific Airways", code: "CX" }
+        ];
+        if(shared_flight_company){
+          toinSharedflightcompany=shared_flight_company;
+
+          if(!airlines.find(airline => airline.name === toinSharedflightcompany)){
+            const newairline={name: shared_flight_company,code: shared_flight_company.substring(0, 2).toUpperCase()}
+            airlines.push(newairline);
+          }
+          if(shared_flight_number){
+            toinSharedflightnumber=shared_flight_number
+          }
+          else{
+            const flightNumber = Math.floor(1000 + Math.random() * 9000);
+            const Airline=airlines.find(airline => airline.name === toinSharedflightcompany);
+            toinSharedflightnumber=`${Airline.code}${flightNumber}`;
+          }
+        }
+        else{
+          if(!shared_flight_number){
+            const shared = Math.random() < 0.2;
+            if (shared) {
+              // Randomly choose an airline company
+              const randomAirline = airlines[Math.floor(Math.random() * airlines.length)];
+              // Generate a random 4-digit flight number
+              const flightNumber = Math.floor(1000 + Math.random() * 9000);
+              toinSharedflightnumber = `${randomAirline.code}${flightNumber}`;
+              toinSharedflightcompany = randomAirline.name;
+            }
+          }
+          else{
+            toinSharedflightnumber=shared_flight_number;
+            const randomAirline = airlines[Math.floor(Math.random() * airlines.length)];
+            toinSharedflightcompany = randomAirline.name;
+          }
+        }
+
+
+        let toinVehicle
+        const{ data: aircrafts, error: aircraftError } = await supabase
+        .from('aircrafts')
+        .select('*');
+        if(aircraftError) {
+          throw aircraftError;
+        }
+
+
+        if(vehicle_type){
+          const matchedVehicle=aircrafts.find(aircrafts=>aircrafts['vehicletype']===vehicle_type);
+          if(!matchedVehicle){
+            throw new Error(`Provided vehicletype "${vehicle_type}" is not in the database`)
+          }
+          else{
+            toinVehicle=matchedVehicle;
+          }
+        }
+        else{
+          toinVehicle = getRandomaircraft(aircrafts);
+        }
+
+
+
     
         // Insert the flight information into the Supabase table
         const { data: insertedFlightInfo, error: insertError } = await supabase
           .from('flight_info')
           .insert({
-            flight_num,
-            date,
-            time,
-            duration,
-            distance,
-            origin_country: originAirport.Country,
-            origin_city: originAirport.City,
-            origin_airport_name: originAirport['Airport Name'],
-            origin_airport_code: originAirport['Airport Code'],
-            destination_country: destinationAirport.Country,
-            destination_city: destinationAirport.City,
-            destination_airport_name: destinationAirport['Airport Name'],
-            destination_airport_code: destinationAirport['Airport Code'],
-            vehicle_type,
-            shared_flight_number,
-            shared_flight_company
+            flight_num: toinFlightNumber,
+            date: toinDate,
+            duration: toinDuration,
+            distance: toinDistance,
+            origin_country: toinOriginairport.Country,
+            origin_city: toinOriginairport.City,
+            origin_airport_name: toinOriginairport['Airport Name'],
+            origin_airport_code: toinOriginairport['Airport Code'],
+            destination_country: toinDestinationairport.Country,
+            destination_city: toinDestinationairport.City,
+            destination_airport_name: toinDestinationairport['Airport Name'],
+            destination_airport_code: toinDestinationairport['Airport Code'],
+            vehicle_type: toinVehicle,
+            shared_flight_number: toinSharedflightnumber,
+            shared_flight_company: toinSharedflightcompany,
+            time: toinTime
           });
     
         if (insertError) {
