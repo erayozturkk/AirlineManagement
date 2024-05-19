@@ -85,8 +85,8 @@ module.exports = function createFlightInfoRouter(supabaseKey) {
             
             const { data: existingFlights, error: flightInfoError } = await supabase
             .from('flight_info')
-            .select('flight_num')
-            .eq('flight_num', flightnum)
+            .select('flight_num,shared_flight_number,vehicle_type')
+            .eq('flight_num', flightnum);
 
         if (flightInfoError) {
             throw flightInfoError;
@@ -95,7 +95,7 @@ module.exports = function createFlightInfoRouter(supabaseKey) {
         if (existingFlights.length === 0) {
             return res.status(400).json({ error: 'Flight number not found' });
         }
-
+        const vehicleType = existingFlights[0].vehicle_type;
         // Generate random passenger information if not provided
         const passengerInfo = {
             id: id,
@@ -127,41 +127,40 @@ module.exports = function createFlightInfoRouter(supabaseKey) {
             }
         }
 
-        // Determine seating plan based on vehicle type from flight_info table
-        const { data: flightInfoData, error: flightInfoDataError } = await supabase
-            .from('flight_info')
-            .select('vehicle_type')
-            .eq('flight_num', flightnum);
-
-        if (flightInfoDataError) {
-            throw flightInfoDataError;
-        }
-
-        const vehicleType = flightInfoData[0].vehicle_type;
 
         // Determine seating plan based on vehicle type
         const { data: aircraftData, error: aircraftDataError } = await supabase
             .from('aircrafts')
-            .select('seatingplan')
+            .select('seatingplan, numberofseats')
             .eq('vehicletype', vehicleType);
 
         if (aircraftDataError) {
             throw aircraftDataError;
         }
-
+        const max_seats = aircraftData[0].numberofseats;
         const seatingPlan = aircraftData[0].seatingplan;
+        if( seatnumber && (seatnumber > max_seats)){
+            throw new Error('Seat number exceeds maximum.')
+            
+        }
 
+        const Layout=seatingPlan["business"].layout;
+        const seatsPerRow = Layout.split('-').reduce((total, num) => total + parseInt(num), 0);
+        const businessmax=seatsPerRow*seatingPlan["business"].rows;
         // Calculate seat type if not provided
-        if (!seattype && seatnumber) {
-            const Layout=seatingPlan["business"].layout;
-            const seatsPerRow = Layout.split('-').reduce((total, num) => total + parseInt(num), 0);
-            const businessmax=seatsPerRow*seatingPlan["business"].rows;
+        if (!seattype && seatnumber) {     
             if(seatnumber<=businessmax){
                 passengerInfo.seattype="business";
             }
             else{
                 passengerInfo.seattype="economy";
             }
+        }
+        if(seattype === "business" && seatnumber > businessmax){
+            throw new Error('Seat type does not match seat number.')
+        }
+        if(seattype === "economy" && seatnumber < businessmax){
+            throw new Error('Seat type does not match seat number.')
         }
         const { data: lastCrewMember, error: lastCrewMemberError } = await supabase
         .from('people')

@@ -91,17 +91,15 @@ module.exports = function createFlightCrewInfoRouter(supabaseKey) {
     
             const limitNumber = parseInt(limit);
     
-            // Get the last id from the database
             const { data: lastCrewMember, error: lastCrewMemberError } = await supabase
-                .from('flight_crew')
-                .select('id')
-                .order('id', { ascending: false })
-                .limit(1);
-    
+              .from('people')
+              .select('id')
+              .order('id', { ascending: false })
+              .limit(1);
+
             if (lastCrewMemberError) {
-                throw lastCrewMemberError;
+              throw lastCrewMemberError;
             }
-    
             // Calculate the next available id
             const nextId = lastCrewMember ? lastCrewMember[0].id + 1 : 1;
     
