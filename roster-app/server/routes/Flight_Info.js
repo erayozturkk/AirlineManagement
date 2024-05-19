@@ -12,93 +12,62 @@ module.exports = function createFlightInfoRouter(supabaseKey) {
 
     // Endpoint to get flight information by flight number
     router.get('/find_flight_information', async (req, res) => {
-        try {
-            const {
-                flight_num,
-                date,
-                time,
-                origin_country,
-                origin_city,
-                origin_airport_name,
-                origin_airport_code,
-                destination_country,
-                destination_city,
-                vehicle_type,
-                destination_airport_name,
-                destination_airport_code,
-                shared_flight_number,
-                shared_flight_company
-            } = req.query;
-    
-            let query = supabase.from('flight_info').select('*');
-    
-            if (flight_num) {
-                query = query.eq('flight_num', flight_num);
-            }
-    
-            if (date) {
-                query = query.eq('date', date);
-            }
-            if (time){
-                query = query.eq('time',time);
-            }
-    
-            if (origin_country) {
-                query = query.eq('origin_country', origin_country);
-            }
-    
-            if (origin_city) {
-                query = query.eq('origin_city', origin_city);
-            }
-    
-            if (origin_airport_name) {
-                query = query.eq('origin_airport_name', origin_airport_name);
-            }
-    
-            if (origin_airport_code) {
-                query = query.eq('origin_airport_code', origin_airport_code);
-            }
-    
-            if (destination_country) {
-                query = query.eq('destination_country', destination_country);
-            }
-    
-            if (destination_city) {
-                query = query.eq('destination_city', destination_city);
-            }
-    
-            if (vehicle_type) {
-                query = query.eq('vehicle_type', vehicle_type);
-            }
-    
-            if (destination_airport_name) {
-                query = query.eq('destination_airport_name', destination_airport_name);
-            }
-    
-            if (destination_airport_code) {
-                query = query.eq('destination_airport_code', destination_airport_code);
-            }
-    
-            if (shared_flight_number) {
-                query = query.eq('shared_flight_number', shared_flight_number);
-            }
-    
-            if (shared_flight_company) {
-                query = query.eq('shared_flight_company', shared_flight_company);
-            }
-    
-            const { data, error } = await query;
-    
-            if (error) {
-                throw error;
-            }
-    
-            res.json(data);
-        } catch (error) {
-            console.error('Error fetching flight information:', error.message);
-            res.status(500).json({ error: 'Internal server error' });
-        }
-    });
+      try {
+          const {
+              flight_num,
+              date,
+              time,
+              origin_country,
+              origin_city,
+              origin_airport_name,
+              origin_airport_code,
+              destination_country,
+              destination_city,
+              vehicle_type,
+              destination_airport_name,
+              destination_airport_code,
+              shared_flight_number,
+              shared_flight_company
+          } = req.query;
+  
+          let query = supabase.from('flight_info').select('*');
+  
+          const queryParams = {
+              flight_num,
+              date,
+              time,
+              origin_country,
+              origin_city,
+              origin_airport_name,
+              origin_airport_code,
+              destination_country,
+              destination_city,
+              vehicle_type,
+              destination_airport_name,
+              destination_airport_code,
+              shared_flight_number,
+              shared_flight_company
+          };
+  
+          Object.keys(queryParams).forEach(key => {
+              if (queryParams[key]) {
+                  query = query.eq(key, queryParams[key]);
+              }
+          });
+  
+          const { data, error } = await query;
+  
+          if (error) {
+              console.error('Error fetching flight information:', error.message);
+              return res.status(500).json({ error: 'Internal server error' });
+          }
+  
+          res.json(data);
+      } catch (error) {
+          console.error('Error fetching flight information:', error.message);
+          res.status(500).json({ error: 'Internal server error' });
+      }
+  });
 
     // POST route to add flight information
 router.post('/add-flight-info', async (req, res) => {
@@ -124,7 +93,7 @@ router.post('/add-flight-info', async (req, res) => {
     else{
       limitNumber=5;
     }
-      
+    const addedFlights = [];
       for (let i = 0; i < limitNumber; i++) {
 
 
@@ -203,13 +172,13 @@ router.post('/add-flight-info', async (req, res) => {
           throw airportError;
         }
         if(origin_airport_name){
-        const matchedAirport = airports.find(airport => airport['Airport Name'] === origin_airport_name);
-        if(!matchedAirport){
-          throw new Error(`Origin airport "${origin_airport_name}" not found in the database.`);
-        }
-        else{
-          toinOriginairport=matchedAirport;
-        }
+          const matchedAirport = airports.find(airport => airport['Airport Name'] === origin_airport_name);
+          if(!matchedAirport){
+            throw new Error(`Origin airport "${origin_airport_name}" not found in the database.`);
+          }
+          else{
+            toinOriginairport=matchedAirport;
+          }
         }
         else{
           toinOriginairport  = getRandomAirport(airports);;
@@ -235,58 +204,23 @@ router.post('/add-flight-info', async (req, res) => {
         }
         
         
-
-
-
-
-        //generate random shared flight company and shared flight number from a array if it is not provided in request 
         //if Shared flight company is provided but there is no flight number create a random flight number starting with first two letters of that company name
         let toinSharedflightcompany;
         let toinSharedflightnumber;
-        const airlines = [
-          { name: "Emirates", code: "EK" },
-          { name: "American Airlines", code: "AA" },
-          { name: "Lufthansa", code: "LH" },
-          { name: "British Airways", code: "BA" },
-          { name: "Delta Air Lines", code: "DL" },
-          { name: "Air France", code: "AF" },
-          { name: "Singapore Airlines", code: "SQ" },
-          { name: "Qantas Airways", code: "QF" },
-          { name: "Cathay Pacific Airways", code: "CX" }
-        ];
-        if(shared_flight_company){
-          toinSharedflightcompany=shared_flight_company;
 
-          if(!airlines.find(airline => airline.name === toinSharedflightcompany)){
-            const newairline={name: shared_flight_company,code: shared_flight_company.substring(0, 2).toUpperCase()}
-            airlines.push(newairline);
-          }
+        if(shared_flight_company){          
+          toinSharedflightcompany=shared_flight_company;
           if(shared_flight_number){
             toinSharedflightnumber=shared_flight_number
           }
           else{
-            const flightNumber = Math.floor(1000 + Math.random() * 9000);
-            const Airline=airlines.find(airline => airline.name === toinSharedflightcompany);
-            toinSharedflightnumber=`${Airline.code}${flightNumber}`;
+            const flightNumber = Math.floor(1000 + Math.random() * 9000);           
+            toinSharedflightnumber=`${shared_flight_company.substring(0, 2).toUpperCase()}${flightNumber}`;
           }
         }
         else{
-          if(!shared_flight_number){
-            const shared = Math.random() < 0.2;
-            if (shared) {
-              // Randomly choose an airline company
-              const randomAirline = airlines[Math.floor(Math.random() * airlines.length)];
-              // Generate a random 4-digit flight number
-              const flightNumber = Math.floor(1000 + Math.random() * 9000);
-              toinSharedflightnumber = `${randomAirline.code}${flightNumber}`;
-              toinSharedflightcompany = randomAirline.name;
-            }
-          }
-          else{
-            toinSharedflightnumber=shared_flight_number;
-            const randomAirline = airlines[Math.floor(Math.random() * airlines.length)];
-            toinSharedflightcompany = randomAirline.name;
-          }
+          toinSharedflightcompany= null;
+          toinSharedflightnumber= null;
         }
 
 
@@ -343,9 +277,7 @@ router.post('/add-flight-info', async (req, res) => {
     
         // Insert the flight information into the Supabase table
         if(checkForUnique(toinDate,toinTime,toinOriginairport['Airport Name'],toinDestinationairport['Airport Name'])){
-        const { data: insertedFlightInfo, error: insertError } = await supabase
-          .from('flight_info')
-          .insert({
+          const newFlightInfo = {
             flight_num: toinFlightNumber,
             date: toinDate,
             duration: toinDuration,
@@ -362,18 +294,23 @@ router.post('/add-flight-info', async (req, res) => {
             shared_flight_number: toinSharedflightnumber,
             shared_flight_company: toinSharedflightcompany,
             time: toinTime
-          });
+          };
+        const { data: insertedFlightInfo, error: insertError } = await supabase
+          .from('flight_info')
+          .insert(newFlightInfo);
     
         if (insertError) {
           throw insertError;
         }
+
+        addedFlights.push(newFlightInfo);
       }
       else{
         i--;
       }
     }
   
-      res.status(201).json({ message: `Flight information added successfully for ${limitNumber} flights` });
+      res.status(201).json({ message: `Flight information added successfully for ${limitNumber} flights`, addedFlights});
     } catch (error) {
       console.error('Error adding flight information:', error.message);
       res.status(500).json({ error: 'Internal server error' });

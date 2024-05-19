@@ -26,39 +26,29 @@ module.exports = function createFlightInfoRouter(supabaseKey) {
             } = req.query;
 
             let query = supabase.from('passengers').select('*');
-
-            if (passengerid) {
-                query = query.eq('passengerid', passengerid);
-            }
-            if (flightnum) {
-                query = query.eq('flightnum', flightnum);
-            }
-            if (name) {
-                query = query.eq('name', name);
-            }
-            if (age) {
-                query = query.eq('age', age);
-            }
-            if (gender) {
-                query = query.eq('gender', gender);
-            }
-            if (nationality) {
-                query = query.eq('nationality', nationality);
-            }
-            if (seattype) {
-                query = query.eq('seattype', seattype);
-            }
-            if (seatnumber) {
-                query = query.eq('seatnumber', seatnumber);
-            }
-            if (parentid) {
-                query = query.eq('parentid', parentid);
-            }
+            
+            const queryParams = {
+                passengerid,
+                flightnum,
+                name,
+                age,
+                gender,
+                nationality,
+                seattype,
+                seatnumber,
+                parentid
+            };
+            Object.keys(queryParams).forEach(key => {
+                if (queryParams[key]) {
+                    query = query.eq(key, queryParams[key]);
+                }
+            });
 
             const { data, error } = await query;
 
             if (error) {
-                throw error;
+                console.error('Error fetching passanger information:', error.message);
+                return res.status(500).json({ error: 'Internal server error' });
             }
 
             res.json(data);
@@ -67,7 +57,45 @@ module.exports = function createFlightInfoRouter(supabaseKey) {
             res.status(500).json({ error: 'Internal server error' });
         }
     });
+    router.post('/add-passanger-info', async (req, res) => {
+        try {
+            const {
+                flightnum,
+                name,
+                age,
+                gender,
+                nationality,
+                seattype,
+                seatnumber,
+                parentid
+            } = req.query;
+          
+        let limitNumber;
+        if(limit){
+          limitNumber=parseInt(limit);
+        }
+        else{
+          limitNumber=5;
+        }
+        const addedFlights = [];
+          for (let i = 0; i < limitNumber; i++) {
+            
 
+
+          }
+
+        }catch (error) {
+            console.error('Error adding flight information:', error.message);
+            res.status(500).json({ error: 'Internal server error' });
+          }
+        });        
+
+        function generateRandom() {
+            const name = faker.name.findName();
+            const age = faker.datatype.number({ min: 18, max: 60 });
+            const gender = faker.random.arrayElement(["Male", "Female"]);
+            const nationality = faker.address.country();
+        }
     return router;
 }
 

@@ -35,35 +35,13 @@ module.exports = function createCabinCrewInfoRouter(supabaseKey) {
         const newCrewMember = CabinCrew.generateRandom();
         newCrewMember.setAttendantid(nextId); 
         // Check and set each parameter on the newCrewMember object
-        if (name !== undefined) {
-          newCrewMember.setName(name);
-        }
-    
-        if (age !== undefined) {
-          newCrewMember.setAge(age);
-        }
-    
-        if (gender !== undefined) {
-          newCrewMember.setGender(gender);
-        }
-    
-        if (nationality !== undefined) {
-          newCrewMember.setNationality(nationality);
-        }
-    
-        if (languages !== undefined) {
-          // Assuming languages is an array
-          newCrewMember.setLanguages(languages);
-        }
-    
-        if (attendanttype !== undefined) {
-          newCrewMember.setAttendanttype(attendanttype);
-        }
-    
-        if (vehiclerestriction !== undefined) {
-          // Assuming vehiclerestriction is an array
-          newCrewMember.setVehiclerestriction(vehiclerestriction);
-        }
+        if (name !== undefined) newCrewMember.setName(name);
+        if (age !== undefined) newCrewMember.setAge(age);
+        if (gender !== undefined) newCrewMember.setGender(gender);
+        if (nationality !== undefined) newCrewMember.setNationality(nationality);
+        if (languages !== undefined) newCrewMember.setLanguages(languages);
+        if (attendanttype !== undefined) newCrewMember.setAttendanttype(attendanttype);
+        if (vehiclerestriction !== undefined) newCrewMember.setVehiclerestriction(vehiclerestriction);
     
         // Insert the crew member into the Supabase table
         const { data: insertedCrewMember, error: insertError } = await supabase
