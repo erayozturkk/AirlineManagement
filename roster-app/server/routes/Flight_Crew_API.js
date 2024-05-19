@@ -14,25 +14,25 @@ module.exports = function createFlightCrewInfoRouter(supabaseKey) {
 
     router.post('/add-crew-member', async (req, res) => {
         try {
-          // Get the last ID from the database
+          // Get the last id from the database
           const { data: lastCrewMember, error: lastCrewMemberError } = await supabase
-            .from('flight_crew')
-            .select('pilotId')
-            .order('pilotId', { ascending: false })
+            .from('people')
+            .select('id')
+            .order('id', { ascending: false })
             .limit(1);
-      
-          if (lastCrewMemberError) {
-            throw lastCrewMemberError;
-          }
-      
-          // Calculate the next available ID
-          const nextId = lastCrewMember ? lastCrewMember[0].pilotId + 1 : 1;
+  
+        if (lastCrewMemberError) {
+          throw lastCrewMemberError;
+        }
+  
+        // Calculate the next available id
+        const nextId = lastCrewMember.length > 0 ? lastCrewMember[0].id + 1 : 1;
           
           // Extract parameters from the request query
           const { name, age, gender, nationality, languages, seniorityLevel, vehiclerestriction} = req.query;
-          // Create a new random crew member object the set the next available ID
+          // Create a new random crew member object the set the next available id
           const newCrewMember = Pilot.generateRandom();
-          newCrewMember.pilotId=nextId; 
+          newCrewMember.id=nextId; 
           // Check and set each parameter on the newCrewMember object
           if (name !== undefined) {
             newCrewMember.name=name;
@@ -91,19 +91,19 @@ module.exports = function createFlightCrewInfoRouter(supabaseKey) {
     
             const limitNumber = parseInt(limit);
     
-            // Get the last ID from the database
+            // Get the last id from the database
             const { data: lastCrewMember, error: lastCrewMemberError } = await supabase
                 .from('flight_crew')
-                .select('pilotId')
-                .order('pilotId', { ascending: false })
+                .select('id')
+                .order('id', { ascending: false })
                 .limit(1);
     
             if (lastCrewMemberError) {
                 throw lastCrewMemberError;
             }
     
-            // Calculate the next available ID
-            const nextId = lastCrewMember ? lastCrewMember[0].pilotId + 1 : 1;
+            // Calculate the next available id
+            const nextId = lastCrewMember ? lastCrewMember[0].id + 1 : 1;
     
             // Create an array to store the new crew members
             const newCrewMembers = [];
@@ -111,7 +111,7 @@ module.exports = function createFlightCrewInfoRouter(supabaseKey) {
             // Generate random pilots based on the limit
             for (let i = 0; i < limitNumber; i++) {
                 const newCrewMember = Pilot.generateRandom();
-                newCrewMember.pilotId = nextId + i; // Increment the ID for each new pilot
+                newCrewMember.pilotId = nextId + i; // Increment the id for each new pilot
                 newCrewMembers.push(newCrewMember);
             }
     
@@ -144,7 +144,7 @@ module.exports = function createFlightCrewInfoRouter(supabaseKey) {
           const { data, error } = await supabase
             .from('flight_crew')
             .select('*')
-            .order('pilotId', { ascending: true }) // Sort by attendant id in ascending order
+            .order('id', { ascending: true }) // Sort by attendant id in ascending order
             .limit(limitNumber);
       
           if (error) {
@@ -169,7 +169,7 @@ module.exports = function createFlightCrewInfoRouter(supabaseKey) {
           let { data: crewMembers, error } = await supabase
             .from('flight_crew')
             .select('*')
-            .order('pilotId', { ascending: true }); 
+            .order('id', { ascending: true }); 
       
           // Handle any error fetching crew members
           if (error) {

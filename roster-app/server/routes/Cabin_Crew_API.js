@@ -12,107 +12,59 @@ module.exports = function createCabinCrewInfoRouter(supabaseKey) {
   // Initialize Supabase client
   const supabaseUrl = "https://hsixajfgpamanbqvxyyw.supabase.co";
   const supabase = createClient(supabaseUrl, supabaseKey);
-  // POST route to add a new crew member
-  router.post('/:add-crew-member', async (req, res) => {
-      try {
-        // Get the last ID from the database
-        const { data: lastCrewMember, error: lastCrewMemberError } = await supabase
-          .from('cabincrewmembers')
-          .select('attendantid')
-          .order('attendantid', { ascending: false })
-          .limit(1);
-    
-        if (lastCrewMemberError) {
-          throw lastCrewMemberError;
-        }
-    
-        // Calculate the next available ID
-        const nextId = lastCrewMember ? lastCrewMember[0].attendantid + 1 : 1;
-        
-        // Extract parameters from the request query
-        const { name, age, gender, nationality, languages, attendanttype, vehiclerestriction} = req.query;
-        // Create a new random crew member object the set the next available ID
-        const newCrewMember = CabinCrew.generateRandom();
-        newCrewMember.setAttendantid(nextId); 
-        // Check and set each parameter on the newCrewMember object
-        if (name !== undefined) newCrewMember.setName(name);
-        if (age !== undefined) newCrewMember.setAge(age);
-        if (gender !== undefined) newCrewMember.setGender(gender);
-        if (nationality !== undefined) newCrewMember.setNationality(nationality);
-        if (languages !== undefined) newCrewMember.setLanguages(languages);
-        if (attendanttype !== undefined) newCrewMember.setAttendanttype(attendanttype);
-        if (vehiclerestriction !== undefined) newCrewMember.setVehiclerestriction(vehiclerestriction);
-    
-        // Insert the crew member into the Supabase table
-        const { data: insertedCrewMember, error: insertError } = await supabase
-          .from('cabincrewmembers')
-          .insert(newCrewMember);
-    
-        if (insertError) {
-          throw insertError;
-        }
-    
-        res.status(201).json({ message: 'Crew member added successfully', crewMember: newCrewMember });
-      } catch (error) {
-        console.error('Error adding crew member:', error.message);
-        res.status(500).json({ error: 'Internal server error' });
-      }
-  });
 
-  router.post('/add-many-crew-members', async (req, res) => {
+  // POST route to add a new crew member
+  router.post('/add-crew-member', async (req, res) => {
     try {
-      // Extract the limit parameter from the request query
-      const { limit } = req.query;
-      
-  
-      // Check if the limit parameter is provided and valid
-      if (!limit || isNaN(parseInt(limit))) {
-        return res.status(400).json({ error: 'Limit parameter is required and must be a number' });
+      // Get the last id from the database
+      const { data: lastCrewMember, error: lastCrewMemberError } = await supabase
+        .from('people')
+        .select('id')
+        .order('id', { ascending: false })
+        .limit(1);
+
+      if (lastCrewMemberError) {
+        throw lastCrewMemberError;
       }
-  
-      const limitNumber = parseInt(limit);
-  
-      // Add the specified number of random cabin crew members
-      const addedCrewMembers = [];
-      for (let i = 0; i < limitNumber; i++) {
-        const { data: lastCrewMember, error: lastCrewMemberError } = await supabase
-          .from('cabincrewmembers')
-          .select('attendantid')
-          .order('attendantid', { ascending: false })
-          .limit(1);
-    
-        if (lastCrewMemberError) {
-          throw lastCrewMemberError;
-        }
-    
-        // Calculate the next available ID
-        const nextId = lastCrewMember ? lastCrewMember[0].attendantid + 1 : 1;
-        // Generate a random cabin crew member
-        const newCrewMember = CabinCrew.generateRandom();
-        newCrewMember.setAttendantid(nextId); 
-        
-        // Insert the crew member into the Supabase table
-        const { data, error } = await supabase
-          .from('cabincrewmembers')
-          .insert(newCrewMember);
-        
-        if (error) {
-          throw error;
-        }
-  
-        addedCrewMembers.push(newCrewMember);
+
+      // Calculate the next available id
+      const nextId = lastCrewMember.length > 0 ? lastCrewMember[0].id + 1 : 1;
+
+      // Extract parameters from the request query
+      const { name, age, gender, nationality, languages, attendanttype, vehiclerestriction } = req.query;
+
+      // Create a new random crew member object and set the next available id
+      const newCrewMember = CabinCrew.generateRandom();
+      newCrewMember.setAttendantid(nextId);
+
+      // Check and set each parameter on the newCrewMember object
+      if (name !== undefined) newCrewMember.setName(name);
+      if (age !== undefined) newCrewMember.setAge(age);
+      if (gender !== undefined) newCrewMember.setGender(gender);
+      if (nationality !== undefined) newCrewMember.setNationality(nationality);
+      if (languages !== undefined) newCrewMember.setLanguages(languages);
+      if (attendanttype !== undefined) newCrewMember.setAttendanttype(attendanttype);
+      if (vehiclerestriction !== undefined) newCrewMember.setVehiclerestriction(vehiclerestriction);
+
+      // Insert the crew member into the Supabase table
+      const { data: insertedCrewMember, error: insertError } = await supabase
+        .from('cabin_crew')
+        .insert(newCrewMember);
+
+      if (insertError) {
+        throw insertError;
       }
-  
-      res.status(201).json({ message: 'Crew members added successfully', addedCrewMembers });
+
+      res.status(201).json({ message: 'Crew member added successfully', crewMember: newCrewMember });
     } catch (error) {
-      console.error('Error adding crew members:', error.message);
+      console.error('Error adding crew member:', error.message);
       res.status(500).json({ error: 'Internal server error' });
     }
   });
   
     
     
-    // GET route to get a specified number of crew members sorted by attendantid
+    // GET route to get a specified number of crew members sorted by id
     router.get('/get-crew-members', async (req, res) => {
       try {
         // Extract the limit parameter from the query string
@@ -123,9 +75,9 @@ module.exports = function createCabinCrewInfoRouter(supabaseKey) {
     
         // Fetch the list of crew members from Supabase with sorting by attendant id and the specified limit
         const { data, error } = await supabase
-          .from('cabincrewmembers')
+          .from('cabin_crew')
           .select('*')
-          .order('attendantid', { ascending: true }) // Sort by attendant id in ascending order
+          .order('id', { ascending: true }) // Sort by attendant id in ascending order
           .limit(limitNumber);
     
         if (error) {
@@ -150,9 +102,9 @@ module.exports = function createCabinCrewInfoRouter(supabaseKey) {
     
         // Fetch crew members from Supabase
         let { data: crewMembers, error } = await supabase
-          .from('cabincrewmembers')
+          .from('cabin_crew')
           .select('*')
-          .order('attendantid', { ascending: true }); 
+          .order('id', { ascending: true }); 
     
         // Handle any error fetching crew members
         if (error) {

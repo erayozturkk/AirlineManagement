@@ -24,8 +24,8 @@ const aircrafts = [
 
 
 class CabinCrew {
-    constructor(attendantid, name, age, gender, nationality, languages, attendanttype, vehiclerestriction, recipes) {
-        this.attendantid = attendantid;
+    constructor(id, name, age, gender, nationality, languages, attendanttype, vehiclerestriction, recipes) {
+        this.id = id;
         this.name = name;
         this.age = age;
         this.gender = gender;
@@ -38,7 +38,7 @@ class CabinCrew {
 
     // Getters
     getAttendantid() {
-        return this.attendantid;
+        return this.id;
     }
 
     getName() {
@@ -74,8 +74,8 @@ class CabinCrew {
     }
 
     // Setters
-    setAttendantid(attendantid) {
-        this.attendantid = attendantid;
+    setAttendantid(id) {
+        this.id = id;
     }
 
     setName(name) {
@@ -114,7 +114,7 @@ class CabinCrew {
     }
 
     static generateRandom() {
-        const attendantid = faker.datatype.number();
+        const id = faker.datatype.number();
         const name = faker.name.findName();
         const age = faker.datatype.number({ min: 18, max: 60 });
         const gender = faker.random.arrayElement(["Male", "Female"]);
@@ -128,7 +128,7 @@ class CabinCrew {
             assignedRecipes = faker.random.arrayElements(recipes, faker.datatype.number({ min: 2, max: 4 }));
         }
 
-        return new CabinCrew(attendantid, name, age, gender, nationality, languages, attendanttype, vehiclerestriction, assignedRecipes);
+        return new CabinCrew(id, name, age, gender, nationality, languages, attendanttype, vehiclerestriction, assignedRecipes);
     }
 
     toString() {
@@ -137,5 +137,18 @@ class CabinCrew {
 }
 
 module.exports = { CabinCrew, commonLanguages, recipes, aircrafts };
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
