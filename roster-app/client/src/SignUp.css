@@ -71,3 +71,16 @@ a {
 a:hover {
     text-decoration: underline;
 }
+
+.password-validations p {
+    margin: 0;
+    font-size: 12px;
+}
+
+.password-validations .valid {
+    color: green;
+}
+
+.password-validations .invalid {
+    color: red;
+}

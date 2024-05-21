@@ -1,14 +1,23 @@
-const User = require('../models/User');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const { createClient } = require('@supabase/supabase-js');
+
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_KEY;
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 // Register User
 const register = async (req, res) => {
-    const { username, email, password, userType = 'passenger' } = req.body; // Set default userType
+    const { username, email, password, role = 'admin' } = req.body; // Set default role
 
     try {
         // Check if username or email already exists
-        const existingUser = await User.findOne({ $or: [{ username }, { email }] });
+        let { data: existingUser, error } = await supabase
+            .from('useraccounts')
+            .select('*')
+            .or(`username.eq.${username},email.eq.${email}`)
+            .single();
+
         if (existingUser) {
             return res.status(400).json({ message: "Username or Email already exists" });
         }
@@ -18,25 +27,31 @@ const register = async (req, res) => {
         const hashedPassword = await bcrypt.hash(password, salt);
 
         // Create a new user
-        const newUser = new User({
-            username,
-            email,
-            password: hashedPassword,
-            userType
-        });
+        const { data: newUser, error: insertError } = await supabase
+            .from('useraccounts')
+            .insert([
+                {
+                    username,
+                    email,
+                    passwordhash: hashedPassword,
+                    role
+                }
+            ])
+            .select()
+            .single();
 
-        await newUser.save();
+        if (insertError) throw insertError;
 
         // Generate JWT token
-        const token = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+        const token = jwt.sign({ id: newUser.userid }, process.env.JWT_SECRET, { expiresIn: '1h' });
 
         res.status(201).json({
             message: "User registered successfully",
             token,
             userDetails: {
-                id: newUser._id,
+                id: newUser.userid,
                 username: newUser.username,
-                userType: newUser.userType
+                role: newUser.role
             }
         });
     } catch (error) {
@@ -51,27 +66,32 @@ const login = async (req, res) => {
 
     try {
         // Check if user exists
-        const user = await User.findOne({ username });
+        let { data: user, error } = await supabase
+            .from('useraccounts')
+            .select('*')
+            .eq('username', username)
+            .single();
+
         if (!user) {
             return res.status(400).json({ message: "Invalid credentials" });
         }
 
         // Compare password
-        const isMatch = await bcrypt.compare(password, user.password);
+        const isMatch = await bcrypt.compare(password, user.passwordhash);
         if (!isMatch) {
             return res.status(400).json({ message: "Invalid credentials" });
         }
 
         // Generate JWT token
-        const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+        const token = jwt.sign({ id: user.userid }, process.env.JWT_SECRET, { expiresIn: '1h' });
 
         res.json({
             message: "Logged in successfully",
             token,
             userDetails: {
-                id: user._id,
+                id: user.userid,
                 username: user.username,
-                userType: user.userType
+                role: user.role
             }
         });
     } catch (error) {

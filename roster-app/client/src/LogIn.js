@@ -10,7 +10,7 @@ const LoginPage = () => {
         password: ''
     });
 
-    const { setUser } = useUser();
+    const { username, password } = credentials;
     const navigate = useNavigate();
 
     const handleChange = (e) => {
@@ -20,7 +20,18 @@ const LoginPage = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            navigate('/dashboard');
+            const config = {
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            };
+            const body = JSON.stringify({ username, password });
+            const loginResponse = await axios.post('http://localhost:5001/auth/login', body, config);
+            if (loginResponse.status === 200) {
+                console.log('Login successful:', loginResponse.data);
+                localStorage.setItem('token', loginResponse.data.token);
+                navigate('/dashboard');
+            }
         } catch (err) {
             console.error("Login error:", err.response.data);
         }

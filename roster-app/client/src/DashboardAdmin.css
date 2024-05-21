@@ -42,40 +42,26 @@ body.dashboard-page {
 .dashboard-menu {
     display: flex;
     flex-direction: column;
-    justify-content: space-around;
     padding: 20px;
     background: white;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    align-items: center;
+}
+
+.dashboard-menu input {
+    padding: 10px;
+    margin: 10px 0px;
+    border-radius: 5px;
+    border: solid 1px #002277;
+
 }
 
 .input_container {
     display: flex;
-    justify-content: space-between;
+    justify-content: center;
     flex-direction: row;
 }
 
-.dashboard-menu-item,
-.filter {
-    flex: 1;
-    margin: 0 10px;
-}
-
-.dashboard-menu-item:nth-of-type(2) input[type="text"],
-input[type="date"] {
-    width: 100%;
-    padding: 8px;
-    margin: 8px 0;
-    box-sizing: border-box;
-    border-radius: 10px;
-}
-
-.dashboard-menu-item:nth-of-type(1) input[type="text"] {
-    margin: 100px 0;
-    width: 100%;
-    box-sizing: border-box;
-    padding: 8px;
-    border-radius: 10px;
-}
 
 .dashboard-menu button {
     padding: 10px 20px;
@@ -84,7 +70,8 @@ input[type="date"] {
     border: none;
     cursor: pointer;
     border-radius: 5px;
-    width: 100%;
+    display: inline-block;
+    margin-top: 20px;
 }
 
 .dashboard-menu button:hover {
@@ -104,4 +91,104 @@ input[type="date"] {
     background-color: #002277;
     color: white;
     border-radius: 10px;
+}
+
+#Date_Container {
+    display: flex;
+    justify-content: space-between;
+    flex-direction: row;
+}
+
+.dashboard-page {
+    font-family: Arial, sans-serif;
+    padding: 20px;
+}
+
+.dashboard-navbar {
+    display: flex;
+    justify-content: space-around;
+    margin-bottom: 20px;
+}
+
+.nav-item {
+    text-decoration: none;
+    color: #007bff;
+}
+
+.dashboard-header {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.dashboard-menu {
+    margin-bottom: 20px;
+}
+
+.input_container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.filter {
+    margin-bottom: 10px;
+    display: flex;
+    flex-direction: column;
+}
+
+#Date_Container {
+    display: flex;
+    gap: 10px;
+}
+
+.results-section {
+    margin-top: 20px;
+}
+
+.result-item {
+    background-color: #f8f9fa;
+    padding: 10px;
+    border: 1px solid #ddd;
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.result-buttons button {
+    margin-left: 10px;
+    background-color: #002277;
+    color: white;
+    border: none;
+    cursor: pointer;
+    border-radius: 5px;
+    padding: 10px;
+}
+
+.result-buttons button:hover {
+    background-color: #555;
+}
+
+.search-toggle {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+
+.search-toggle button {
+    padding: 10px 20px;
+    margin: 0 5px;
+    cursor: pointer;
+}
+
+.search-toggle .active {
+    background-color: #007bff;
+    color: white;
+}
+
+.dashboard-menu form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    /* Center elements inside the form */
 }

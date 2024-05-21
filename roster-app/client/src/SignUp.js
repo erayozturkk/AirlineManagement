@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom'; // Import useNavigate for redirection
+import { useNavigate } from 'react-router-dom';
 import './SignUp.css';
 
 const SignUpPage = () => {
@@ -9,20 +9,54 @@ const SignUpPage = () => {
         email: '',
         password: '',
         confirmPassword: '',
-        userType: 'passenger' // Set default userType to 'passenger'
+        userType: 'admin'
     });
 
+    const [passwordValidations, setPasswordValidations] = useState({
+        length: false,
+        uppercase: false,
+        specialChar: false
+    });
+
+
     const { username, email, password, confirmPassword } = userData;
-    const navigate = useNavigate(); // Hook for navigation
+    const navigate = useNavigate();
+
+    const validatePassword = (password) => {
+        const length = password.length >= 8 && password.length <= 16;
+        const uppercase = /[A-Z]/.test(password);
+        const specialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+
+        setPasswordValidations({ length, uppercase, specialChar });
+    };
 
     const handleChange = (e) => {
         setUserData({ ...userData, [e.target.name]: e.target.value });
+        if (e.target.name === 'password') {
+            validatePassword(e.target.value);
+        }
+        if (e.target.name === 'confirmPassword') {
+            if (e.target.value !== password) {
+                e.target.setCustomValidity("Passwords don't match!");
+            } else {
+                e.target.setCustomValidity('');
+            }
+        }
+        if (e.target.name === 'username') {
+            if (e.target.value.length <= 4) {
+                e.target.setCustomValidity("Username must be at least 5 characters long!");
+            } else {
+                e.target.setCustomValidity('');
+            }
+        }
     };
+
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (password !== confirmPassword) {
             console.error("Passwords don't match!");
+            alert("Passwords don't match! Please try again.");
             return;
         }
         try {
@@ -32,22 +66,20 @@ const SignUpPage = () => {
                 }
             };
             const body = JSON.stringify({ username, email, password, userType: userData.userType });
-            const registerResponse = await axios.post('http://localhost:5001/api/auth/register', body, config);
+            const registerResponse = await axios.post('http://localhost:5001/auth/register', body, config);
 
             if (registerResponse.status === 201) {
-                // Perform login after successful registration
-                const loginResponse = await axios.post('http://localhost:5001/api/auth/login', { username, password }, config);
+                const loginResponse = await axios.post('http://localhost:5001/auth/login', { username, password }, config);
 
                 if (loginResponse.status === 200) {
                     console.log('Sign up & Login successful:', loginResponse.data);
-                    // Assuming you store the token in localStorage or context
                     localStorage.setItem('token', loginResponse.data.token);
-
-                    navigate('/dashboard'); // Redirect to the dashboard
+                    navigate('/dashboard');
                 }
             }
         } catch (err) {
             console.error('Registration Error:', err.response ? err.response.data : err);
+            alert(err.response.data.message);
         }
     };
 
@@ -86,6 +118,17 @@ const SignUpPage = () => {
                                 value={password}
                                 onChange={handleChange}
                             />
+                        </div>
+                        <div className="password-validations">
+                            <p className={passwordValidations.length ? 'valid' : 'invalid'}>
+                                Password must be between 8-16 characters.
+                            </p>
+                            <p className={passwordValidations.uppercase ? 'valid' : 'invalid'}>
+                                Password must include at least 1 uppercase letter.
+                            </p>
+                            <p className={passwordValidations.specialChar ? 'valid' : 'invalid'}>
+                                Password must include at least 1 special character.
+                            </p>
                         </div>
                         <div className="input-group">
                             <input
