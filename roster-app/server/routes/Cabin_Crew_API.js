@@ -3,6 +3,7 @@ const { CabinCrew, commonLanguages, recipes, aircrafts } = require('./CabinCrew'
 
 const express = require('express');
 const router = express.Router();
+const axios = require('axios');
 const { createClient } = require('@supabase/supabase-js');
 
 
@@ -35,7 +36,7 @@ module.exports = function createCabinCrewInfoRouter(supabaseKey) {
 
       // Create a new random crew member object and set the next available id
       const newCrewMember = CabinCrew.generateRandom();
-      newCrewMember.setAttendantid(nextId);
+      newCrewMember.setid(nextId);
 
       // Check and set each parameter on the newCrewMember object
       if (name !== undefined) newCrewMember.setName(name);
@@ -146,41 +147,80 @@ module.exports = function createCabinCrewInfoRouter(supabaseKey) {
     router.get('/find-crew-members', async (req, res) => {
       try {
         // Extract parameters from the query string
-        const { attendanttype, vehiclerestriction, limit } = req.query;
-        // Convert the limit parameter to a number
+        const { id, attendanttype, vehiclerestriction, limit } = req.query;
         const limitNumber = limit ? parseInt(limit) : undefined;
+        const idNumber = id ? parseInt(id) : undefined;
+        
     
-        // Fetch crew members from Supabase
-        let { data: crewMembers, error } = await supabase
-          .from('cabin_crew')
-          .select('*')
-          .order('id', { ascending: true }); 
+        // Construct the query
+        let query = supabase.from('cabin_crew').select('*').order('id', { ascending: true });
+    
+        if (idNumber) {
+          query = query.eq('id', idNumber);
+        } else {
+          if (attendanttype) {
+            query = query.eq('attendanttype', attendanttype);
+          }
+          if (vehiclerestriction) {
+            query = query.contains('vehiclerestriction', [vehiclerestriction]);
+          }
+        }
+    
+        // Execute the query
+        const { data: crewMembers, error } = await query;
     
         // Handle any error fetching crew members
         if (error) {
           throw error;
         }
-    
-        // Filter crew members based on parameters
-        if (attendanttype) {
-          crewMembers = crewMembers.filter(member => member.attendanttype === attendanttype);
+        // If limit is specified, select a random subset of the results
+        if (limitNumber && crewMembers.length > limitNumber) {
+          const shuffled = crewMembers.sort(() => 0.5 - Math.random());
+          const selected = shuffled.slice(0, limitNumber);
+          res.json(selected);
+        } else {
+          res.json(crewMembers);
         }
-        if (vehiclerestriction) {
-          crewMembers = crewMembers.filter(member => member.vehiclerestriction.includes(vehiclerestriction));
-        }
-    
-        // Limit the number of crew members returned if specified
-        if (limitNumber) {
-          crewMembers = crewMembers.slice(0, limitNumber);
-        }
-    
-        // Send response with filtered crew members
-        res.json(crewMembers);
       } catch (error) {
         console.error('Error processing request:', error.message);
         res.status(500).json({ error: 'Internal server error' });
       }
     });
+
+    router.get('/combined-crew-members', async (req, res) => {
+      try {
+        const {  vehiclerestriction: vehicleRestriction} = req.query;
+    
+        const randomValue = Math.floor(Math.random() * 3);
+        const randomValue1to4 = Math.floor(Math.random() * 4) + 1;
+        const randomValue4to16 = Math.floor(Math.random() * 13) + 4
+        const params1 = { attendanttype: "chief", vehicleRestriction, limit: randomValue1to4 };
+        const params2 = { attendanttype: "regular", vehicleRestriction, limit: randomValue4to16 };
+        const params3 = { attendanttype: "chef", vehicleRestriction, limit: randomValue };
+    
+        const baseURL = 'http://localhost:5001/cabin-crew/find-crew-members';
+    
+        // Call /find-crew-members three times with different parameters
+        const [response1, response2, response3] = await Promise.all([
+          axios.get(baseURL, { params: params1 }),
+          axios.get(baseURL, { params: params2 }),
+          axios.get(baseURL, { params: params3 })
+        ]);
+    
+        const combinedCrewMembers = [
+          ...response1.data,
+          ...response2.data,
+          ...response3.data
+        ];
+    
+        res.json(combinedCrewMembers);
+      } catch (error) {
+        console.error('Error combining cabin crew members:', error.message);
+        res.status(500).json({ error: 'Internal server error' });
+      }
+    });
+    
+    
     
   return router;
 };

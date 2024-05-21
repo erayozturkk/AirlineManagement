@@ -20,7 +20,6 @@ class Pilot {
         this.nationality = nationality;
         this.languages = languages;
         this.vehicleRestriction = vehicleRestriction;
-        this.allowedRange = this.calculateMaxAllowedRange;
         this.seniorityLevel = seniorityLevel;
         this.allowedRange = this.calculateMaxAllowedRange();
     }

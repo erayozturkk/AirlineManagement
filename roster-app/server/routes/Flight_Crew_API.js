@@ -2,6 +2,7 @@ const { Pilot } = require('./FlightCrew')
 
 const express = require('express');
 const router = express.Router();
+const axios = require('axios');
 const { createClient } = require('@supabase/supabase-js');
 
 
@@ -13,72 +14,64 @@ module.exports = function createFlightCrewInfoRouter(supabaseKey) {
 
 
     router.post('/add-crew-member', async (req, res) => {
-        try {
-          // Get the last id from the database
-          const { data: lastCrewMember, error: lastCrewMemberError } = await supabase
-            .from('people')
-            .select('id')
-            .order('id', { ascending: false })
-            .limit(1);
-  
+      try {
+        // Get the last id from the database
+        const { data: lastCrewMember, error: lastCrewMemberError } = await supabase
+          .from('people')
+          .select('id')
+          .order('id', { ascending: false })
+          .limit(1)
+          .single();
+      
         if (lastCrewMemberError) {
           throw lastCrewMemberError;
         }
-  
+    
         // Calculate the next available id
-        const nextId = lastCrewMember.length > 0 ? lastCrewMember[0].id + 1 : 1;
-          
-          // Extract parameters from the request query
-          const { name, age, gender, nationality, languages, seniorityLevel, vehiclerestriction} = req.query;
-          // Create a new random crew member object the set the next available id
-          const newCrewMember = Pilot.generateRandom();
-          newCrewMember.id=nextId; 
-          // Check and set each parameter on the newCrewMember object
-          if (name !== undefined) {
-            newCrewMember.name=name;
-          }
-      
-          if (age !== undefined) {
-            newCrewMember.age=age;
-          }
-      
-          if (gender !== undefined) {
-            newCrewMember.gender=gender;
-          }
-      
-          if (nationality !== undefined) {
-            newCrewMember.nationality=nationality;
-          }
-      
-          if (languages !== undefined) {
-            newCrewMember.languages=languages;
-          }
-      
-          if (seniorityLevel !== undefined) {
-            newCrewMember.seniorityLevel=seniorityLevel;
-            newCrewMember.allowedRange = newCrewMember.calculateMaxAllowedRange();
-          }
-      
-          if (vehiclerestriction !== undefined) {  
-            newCrewMember.vehicleRestriction=vehiclerestriction;
-          }
-
-      
-          // Insert the crew member into the Supabase table
-          const { data: insertedCrewMember, error: insertError } = await supabase
-            .from('flight_crew')
-            .insert(newCrewMember);
-      
-          if (insertError) {
-            throw insertError;
-          }
-      
-          res.status(201).json({ message: 'Crew member added successfully', crewMember: newCrewMember });
-        } catch (error) {
-          console.error('Error adding crew member:', error.message);
-          res.status(500).json({ error: 'Internal server error' });
+        const nextId = lastCrewMember ? lastCrewMember.id + 1 : 1;
+    
+        // Extract parameters from the request query with fallback values
+        const {
+          name = '',
+          age = 0,
+          gender = '',
+          nationality = '',
+          languages = [],
+          seniorityLevel = '',
+          vehiclerestriction = ''
+        } = req.query;
+    
+        // Create a new random crew member object and set the next available id
+        const newCrewMember = Pilot.generateRandom();
+        newCrewMember.id = nextId;
+        newCrewMember.name = name || newCrewMember.name;
+        newCrewMember.age = age || newCrewMember.age;
+        newCrewMember.gender = gender || newCrewMember.gender;
+        newCrewMember.nationality = nationality || newCrewMember.nationality;
+        newCrewMember.languages = languages.length ? languages : newCrewMember.languages;
+        newCrewMember.seniorityLevel = seniorityLevel || newCrewMember.seniorityLevel;
+        if (seniorityLevel) {
+          newCrewMember.allowedRange = newCrewMember.calculateMaxAllowedRange();
         }
+        newCrewMember.vehicleRestriction = vehiclerestriction || newCrewMember.vehicleRestriction;
+    
+        // Insert the crew member into the Supabase table
+        const { data: insertedCrewMember, error: insertError } = await supabase
+          .from('flight_crew')
+          .insert(newCrewMember)
+          .single();
+    
+        if (insertError) {
+          throw insertError;
+        }
+    
+        res.status(201).json({ message: 'Crew member added successfully', crewMember: newCrewMember });
+      } catch (error) {
+        console.error('Error adding crew member:', error.message);
+        res.status(500).json({ error: 'Internal server error' });
+      }
     });
+    
 
     router.post('/add-many-crew-member', async (req, res) => {
         try {
@@ -109,7 +102,7 @@ module.exports = function createFlightCrewInfoRouter(supabaseKey) {
             // Generate random pilots based on the limit
             for (let i = 0; i < limitNumber; i++) {
                 const newCrewMember = Pilot.generateRandom();
-                newCrewMember.pilotId = nextId + i; // Increment the id for each new pilot
+                newCrewMember.id = nextId + i; // Increment the id for each new pilot
                 newCrewMembers.push(newCrewMember);
             }
     
@@ -131,69 +124,115 @@ module.exports = function createFlightCrewInfoRouter(supabaseKey) {
 
     // GET route to get a specified number of crew members sorted by attendantid
     router.get('/get-crew-members', async (req, res) => {
-        try {
-          // Extract the limit parameter from the query string
-          const { limit } = req.query;
-          
-          // Convert the limit parameter to a number
-          const limitNumber = limit ? parseInt(limit) : 10; // Default limit is 10 if not provided
-      
-          // Fetch the list of crew members from Supabase with sorting by attendant id and the specified limit
-          const { data, error } = await supabase
-            .from('flight_crew')
-            .select('*')
-            .order('id', { ascending: true }) // Sort by attendant id in ascending order
-            .limit(limitNumber);
-      
-          if (error) {
-            throw error;
-          }
-      
-          res.json({ message: 'Supabase connected successfully', crewMembers: data });
-        } catch (error) {
-          console.error('Supabase connection error:', error.message);
-          res.status(500).json({ error: 'Internal server error' });
+      try {
+        // Extract the limit parameter from the query string
+        const { limit } = req.query;
+        const limitNumber = limit ? parseInt(limit) : 10; // Default limit is 10 if not provided
+    
+        // Construct the query
+        let query = supabase.from('flight_crew').select('*').order('id', { ascending: true }).limit(limitNumber);
+    
+        // Execute the query
+        const { data: crewMembers, error } = await query;
+    
+        // Handle any error fetching crew members
+        if (error) {
+          throw error;
         }
-      });
+    
+        // Send response with crew members
+        res.json(crewMembers);
+      } catch (error) {
+        console.error('Supabase connection error:', error.message);
+        res.status(500).json({ error: 'Internal server error' });
+      }
+    });
+    
 
-      router.get('/find-crew-members', async (req, res) => {
-        try {
-          // Extract parameters from the query string
-          const { seniorityLevel, vehicleRestriction, limit } = req.query;
-          // Convert the limit parameter to a number
-          const limitNumber = limit ? parseInt(limit) : undefined;
-      
-          // Fetch crew members from Supabase
-          let { data: crewMembers, error } = await supabase
-            .from('flight_crew')
-            .select('*')
-            .order('id', { ascending: true }); 
-      
-          // Handle any error fetching crew members
-          if (error) {
-            throw error;
+    router.get('/find-crew-members', async (req, res) => {
+      try {
+        // Extract parameters from the query string
+        const { id, seniorityLevel, vehicleRestriction, allowedRange, limit } = req.query;
+        const limitNumber = limit ? parseInt(limit) : undefined;
+        const idNumber = id ? parseInt(id) : undefined;
+    
+        // Construct the query to fetch all matching records
+        let query = supabase.from('flight_crew').select('*').order('id', { ascending: true });
+    
+        // Apply filters based on query parameters
+        if (idNumber) {
+          query = query.eq('id', idNumber);
+        } else {
+          if (allowedRange) {
+            query = query.gt('allowedRange', allowedRange);
           }
-      
-          // Filter crew members based on parameters
           if (seniorityLevel) {
-            crewMembers = crewMembers.filter(member => member.seniorityLevel === seniorityLevel);
+            query = query.eq('seniorityLevel', seniorityLevel);
           }
           if (vehicleRestriction) {
-            crewMembers = crewMembers.filter(member => member.vehicleRestriction === vehiclerestRiction);
+            query = query.eq('vehicleRestriction', vehicleRestriction);
           }
-      
-          // Limit the number of crew members returned if specified
-          if (limitNumber) {
-            crewMembers = crewMembers.slice(0, limitNumber);
-          }
-      
-          // Send response with filtered crew members
-          res.json(crewMembers);
-        } catch (error) {
-          console.error('Error processing request:', error.message);
-          res.status(500).json({ error: 'Internal server error' });
         }
-      });
+    
+        // Execute the query
+        const { data: crewMembers, error } = await query;
+    
+        // Handle any error fetching crew members
+        if (error) {
+          throw error;
+        }
+    
+        // If limit is specified, select a random subset of the results
+        if (limitNumber && crewMembers.length > limitNumber) {
+          const shuffled = crewMembers.sort(() => 0.5 - Math.random());
+          const selected = shuffled.slice(0, limitNumber);
+          res.json(selected);
+        } else {
+          res.json(crewMembers);
+        }
+      } catch (error) {
+        console.error('Error processing request:', error.message);
+        res.status(500).json({ error: 'Internal server error' });
+      }
+    });
+    
+    
+
+    
+
+    router.get('/combined-crew-members', async (req, res) => {
+      try {
+        const { vehicleRestriction: vehicleRestriction, allowedRange } = req.query;
+
+        const randomValue = Math.floor(Math.random() * 3);
+        const params1 = { seniorityLevel: "Senior", vehicleRestriction, allowedRange, limit: 1 };
+        const params2 = { seniorityLevel: "Junior", vehicleRestriction, allowedRange, limit: 1 };
+        const params3 = { seniorityLevel: "Trainee", vehicleRestriction, allowedRange, limit: randomValue };
+
+        const baseURL = 'http://localhost:5001/flight-crew/find-crew-members';
+
+        // Call /find-crew-members three times with different parameters
+        const [response1, response2, response3] = await Promise.all([
+          axios.get(baseURL, { params: params1 }),
+          axios.get(baseURL, { params: params2 }),
+          axios.get(baseURL, { params: params3 })
+        ]);
+
+        const combinedCrewMembers = [
+          ...response1.data,
+          ...response2.data,
+          ...response3.data
+        ];
+
+        res.json(combinedCrewMembers);
+      } catch (error) {
+        console.error('Error combining crew members:', error.message);
+        res.status(500).json({ error: 'Internal server error' });
+      }
+    });
+
+
+    
     
     
 

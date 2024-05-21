@@ -1,5 +1,29 @@
 const faker = require('faker');
 
+const { createClient } = require('@supabase/supabase-js');
+
+const supabaseUrl = "https://hsixajfgpamanbqvxyyw.supabase.co";
+const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhzaXhhamZncGFtYW5icXZ4eXl3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTEwNDI5NTYsImV4cCI6MjAyNjYxODk1Nn0.22DwSKkVdZYNPGqruamm-IQ5iQRnlnU3tF73GbwXP7E";
+const supabase = createClient(supabaseUrl, supabaseKey);
+
+let aircrafts = [];
+
+// Function to fetch aircrafts data
+async function fetchAircrafts() {
+  const { data: aircraftData, error: aircraftError } = await supabase
+    .from('aircrafts')
+    .select('vehicletype');
+    
+  if (aircraftError) {
+    throw aircraftError;
+  }
+
+  aircrafts = aircraftData.map(aircraft => aircraft.vehicletype);
+}
+
+// Call fetchAircrafts to initialize aircrafts array
+fetchAircrafts().catch(console.error);
+
 // Array of recipes
 const recipes = [
     "spaghetti", "steak", "soup", "pizza", "hamburger", "burrito",
@@ -16,9 +40,6 @@ const commonLanguages = [
     "German", "Japanese", "Swahili", "Korean", "Italian",
     "Turkish", "Dutch", "Polish", "Vietnamese", "Thai"
     // Add more languages as needed
-];
-const aircrafts = [
-    "Airbus A320", "Airbus A330", "Airbus A380", "Boeing 777", "Boeing 787"
 ];
 
 
@@ -74,7 +95,7 @@ class CabinCrew {
     }
 
     // Setters
-    setAttendantid(id) {
+    setid(id) {
         this.id = id;
     }
 
