@@ -141,6 +141,39 @@ module.exports = function createCabinCrewInfoRouter(supabaseKey) {
         res.status(500).json({ error: 'Internal server error' });
       }
     });
+
+    router.get('/get-crew-members-list', async (req, res) => {
+      try {
+          // Extract the ids parameter from the query string and parse it into an array of integers
+          const { ids } = req.query;
+          if (!ids) {
+              return res.status(400).json({ error: 'No ids provided' });
+          }
+  
+          const idsArray = ids.split(',').map(id => parseInt(id.trim())).filter(id => !isNaN(id));
+  
+          if (idsArray.length === 0) {
+              return res.status(400).json({ error: 'Invalid ids provided' });
+          }
+  
+          // Construct the query
+          let query = supabase.from('cabin_crew').select('*').in('id', idsArray);
+  
+          // Execute the query
+          const { data: crewMembers, error } = await query;
+  
+          // Handle any error fetching crew members
+          if (error) {
+              throw error;
+          }
+  
+          // Send response with crew members
+          res.json(crewMembers);
+      } catch (error) {
+          console.error('Supabase connection error:', error.message);
+          res.status(500).json({ error: 'Internal server error' });
+      }
+  });
     
     
     
@@ -193,45 +226,45 @@ module.exports = function createCabinCrewInfoRouter(supabaseKey) {
 
     router.get('/combined-crew-members', async (req, res) => {
       try {
-          const { vehiclerestriction } = req.query;
-  
-          const randomValue = Math.floor(Math.random() * 3);
-          const randomValue1to4 = Math.floor(Math.random() * 4) + 1;
-          const randomValue4to16 = Math.floor(Math.random() * 13) + 4;
-          const params1 = { attendanttype: "chief", vehiclerestriction, limit: randomValue1to4 };
-          const params2 = { attendanttype: "regular", vehiclerestriction, limit: randomValue4to16 };
-          const params3 = { attendanttype: "chef", vehiclerestriction, limit: randomValue };
-  
-          const baseURL = 'http://localhost:5001/cabin-crew/find-crew-members';
-  
-          let combinedCrewMembers = []; // Declare combinedCrewMembers outside the blocks
-  
-          if (randomValue > 0) {
-              const [response1, response2, response3] = await Promise.all([
-                  axios.get(baseURL, { params: params1 }),
-                  axios.get(baseURL, { params: params2 }),
-                  axios.get(baseURL, { params: params3 })
-              ]);
-              combinedCrewMembers = [
-                  ...response1.data,
-                  ...response2.data,
-                  ...response3.data
-              ];
-          } else {
-              const [response1, response2] = await Promise.all([
-                  axios.get(baseURL, { params: params1 }),
-                  axios.get(baseURL, { params: params2 })
-              ]);
-              combinedCrewMembers = [
-                  ...response1.data,
-                  ...response2.data
-              ];
-          }
-  
-          res.json(combinedCrewMembers);
+        const { vehiclerestriction } = req.query;
+    
+        const randomValue = Math.floor(Math.random() * 3);
+        const randomValue1to4 = Math.floor(Math.random() * 4) + 1;
+        const randomValue4to16 = Math.floor(Math.random() * 13) + 4;
+        const params1 = { attendanttype: "chief", vehiclerestriction,limit: randomValue1to4 };
+        const params2 = { attendanttype: "regular", vehiclerestriction, limit: randomValue4to16 };
+        const params3 = { attendanttype: "chef", vehiclerestriction, limit: randomValue };
+    
+        const baseURL = 'http://localhost:5001/cabin-crew/find-crew-members';
+    
+        let combinedCrewMemberIds = []; // Declare combinedCrewMemberIds outside the blocks
+    
+        if (randomValue > 0) {
+          const [response1, response2, response3] = await Promise.all([
+            axios.get(baseURL, { params: params1 }),
+            axios.get(baseURL, { params: params2 }),
+            axios.get(baseURL, { params: params3 })
+          ]);
+          combinedCrewMemberIds = [
+            ...response1.data.map(member => member.id),
+            ...response2.data.map(member => member.id),
+            ...response3.data.map(member => member.id)
+          ];
+        } else {
+          const [response1, response2] = await Promise.all([
+            axios.get(baseURL, { params: params1 }),
+            axios.get(baseURL, { params: params2 })
+          ]);
+          combinedCrewMemberIds = [
+            ...response1.data.map(member => member.id),
+            ...response2.data.map(member => member.id)
+          ];
+        }
+    
+        res.json(combinedCrewMemberIds);
       } catch (error) {
-          console.error('Error combining cabin crew members:', error.message);
-          res.status(500).json({ error: 'Internal server error' });
+        console.error('Error combining cabin crew member IDs:', error.message);
+        res.status(500).json({ error: 'Internal server error' });
       }
     });
   

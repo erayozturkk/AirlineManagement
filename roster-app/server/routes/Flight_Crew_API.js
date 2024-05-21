@@ -147,6 +147,38 @@ module.exports = function createFlightCrewInfoRouter(supabaseKey) {
         res.status(500).json({ error: 'Internal server error' });
       }
     });
+    router.get('/get-crew-members-list', async (req, res) => {
+      try {
+          // Extract the ids parameter from the query string and parse it into an array of integers
+          const { ids } = req.query;
+          if (!ids) {
+              return res.status(400).json({ error: 'No ids provided' });
+          }
+  
+          const idsArray = ids.split(',').map(id => parseInt(id.trim())).filter(id => !isNaN(id));
+  
+          if (idsArray.length === 0) {
+              return res.status(400).json({ error: 'Invalid ids provided' });
+          }
+  
+          // Construct the query
+          let query = supabase.from('flight_crew').select('*').in('id', idsArray);
+  
+          // Execute the query
+          const { data: crewMembers, error } = await query;
+  
+          // Handle any error fetching crew members
+          if (error) {
+              throw error;
+          }
+  
+          // Send response with crew members
+          res.json(crewMembers);
+      } catch (error) {
+          console.error('Supabase connection error:', error.message);
+          res.status(500).json({ error: 'Internal server error' });
+      }
+  });
     
 
     router.get('/find-crew-members', async (req, res) => {
@@ -220,9 +252,9 @@ module.exports = function createFlightCrewInfoRouter(supabaseKey) {
                   axios.get(baseURL, { params: params3 })
               ]);
               combinedCrewMembers = [
-                  ...response1.data,
-                  ...response2.data,
-                  ...response3.data
+                  ...response1.data.map(member => member.id),
+                  ...response2.data.map(member => member.id),
+                  ...response3.data.map(member => member.id)
               ];
           } else {
               const [response1, response2] = await Promise.all([
@@ -230,8 +262,8 @@ module.exports = function createFlightCrewInfoRouter(supabaseKey) {
                   axios.get(baseURL, { params: params2 })
               ]);
               combinedCrewMembers = [
-                  ...response1.data,
-                  ...response2.data
+                  ...response1.data.map(member => member.id),
+                  ...response2.data.map(member => member.id)
               ];
           }
   

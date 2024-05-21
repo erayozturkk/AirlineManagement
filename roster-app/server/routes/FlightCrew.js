@@ -1,15 +1,5 @@
 const faker = require('faker');
-const commonLanguages = [
-    "Spanish", "Mandarin", "Hindi", "Arabic",
-    "Bengali", "French", "Russian", "Portuguese", "Urdu",
-    "German", "Japanese", "Swahili", "Korean", "Italian",
-    "Turkish", "Dutch", "Polish", "Vietnamese", "Thai"
-    // Add more languages as needed
-];
-const aircrafts = [
-    "Airbus A320", "Airbus A330", "Airbus A380", "Boeing 777", "Boeing 787"
-];
-
+const {  commonLanguages, aircrafts } = require('./CabinCrew')
 
 class Pilot {
     constructor(id, name, age, gender, nationality, languages, vehicleRestriction, seniorityLevel) {
