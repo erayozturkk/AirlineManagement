@@ -38,7 +38,8 @@ module.exports = function createFlightCrewInfoRouter(supabaseKey) {
           nationality = '',
           languages = [],
           seniorityLevel = '',
-          vehiclerestriction = ''
+          vehiclerestriction = '',
+          allowedRange
         } = req.query;
     
         // Create a new random crew member object and set the next available id
@@ -50,7 +51,8 @@ module.exports = function createFlightCrewInfoRouter(supabaseKey) {
         newCrewMember.nationality = nationality || newCrewMember.nationality;
         newCrewMember.languages = languages.length ? languages : newCrewMember.languages;
         newCrewMember.seniorityLevel = seniorityLevel || newCrewMember.seniorityLevel;
-        if (seniorityLevel) {
+        newCrewMember.allowedRange = allowedRange || newCrewMember.allowedRange;
+        if (seniorityLevel && !allowedRange) {
           newCrewMember.allowedRange = newCrewMember.calculateMaxAllowedRange();
         }
         newCrewMember.vehicleRestriction = vehiclerestriction || newCrewMember.vehicleRestriction;

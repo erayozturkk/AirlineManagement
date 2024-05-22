@@ -82,7 +82,7 @@ module.exports = function createFlightInfoRouter(supabaseKey) {
         }
         const addedPassengers = [];
           for (let i = 0; i < limitNumber; i++) {
-            
+            //slows down too much need to do it only once       
             const { data: existingFlights, error: flightInfoError } = await supabase
             .from('flight_info')
             .select('flight_num,shared_flight_number,vehicle_type')
