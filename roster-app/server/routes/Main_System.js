@@ -27,7 +27,22 @@ module.exports = function createMainSystemRouter(supabaseKey) {
   router.post('/generate-flight-roster', async (req, res) => {
     try {
       const { flight_num } = req.query; // Use query parameters for GET requests
-  
+
+        // Check if a roster for the given flight_num already exists
+      let query = supabase.from('flightrosters').select('*').eq('flightnum', flight_num).single();
+
+      const { data: existingRoster, error: existingRosterError } = await query;
+
+      if (existingRosterError && existingRosterError.code !== 'PGRST116') {
+        // Handle any other errors except "No rows found" error
+        throw existingRosterError;
+      }
+
+      if (existingRoster) {
+        // If a roster already exists, throw an error
+        return res.status(400).json({ error: 'A flight roster for this flight number already exists.' });
+      }
+
       // Fetch flight information
       const flightInfoResponse = await axios.get('http://localhost:5001/flight-info/find_flight_information', {
         params: { flight_num },
@@ -54,16 +69,45 @@ module.exports = function createMainSystemRouter(supabaseKey) {
   
       // Fetch passengers information
       const passengersResponse = await axios.get('http://localhost:5001/passenger-info/get-passengers', {
-        params: { flight_num },
+        params: { flightnum: flight_num },
         headers: { 'Content-Type': 'application/json' }
       });
       const passengerids = passengersResponse.data.map(passenger => passenger.id);
-  
+
+
+       // Fetch the last roster_id
+       const { data: lastCrewMember, error: lastCrewMemberError } = await supabase
+       .from('flightrosters')
+       .select('rosterid')
+       .order('rosterid', { ascending: false })
+       .limit(1);
+
+        if (lastCrewMemberError) {
+          throw lastCrewMemberError;
+        }
+        // Calculate the next available id
+        const nextId = lastCrewMember ? lastCrewMember[0].rosterid + 1 : 1;
+
+      // Insert the new flight roster data
+        const { error: insertError } = await supabase
+        .from('flightrosters')
+        .insert([
+          {
+            rosterid: nextId,
+            flightnum: flight_num,
+            pilotids: flightCrewids,
+            cabincrewrids: cabinCrewids,
+            passengerids: passengerids
+          }
+        ]);
+
+      if (insertError) {
+        throw insertError;
+      }
       // Combine all data into a single response
-      const flightRoster = {  flightCrewids, cabinCrewids, passengerids };
-      res.json(flightRoster);
+      res.json({ message: 'Flight roster generated and saved successfully', roster_id: nextId });
     } catch (error) {
-      console.error('Error fetching flight roster:', error.message);
+      console.error('Error generating flight roster:', error.message);
       res.status(500).json({ error: 'Internal server error' });
     }
   });
