@@ -193,7 +193,14 @@ module.exports = function createMainSystemRouter(supabaseKey) {
       }));
   
       // Combine all data and sort by name
-      const combinedRoster = [...pilots, ...cabinCrew, ...passengers].sort((a, b) => a.name.localeCompare(b.name));
+      // Sort each array individually
+      const sortedPilots = pilots.sort((a, b) => a.name.localeCompare(b.name));
+      const sortedCabinCrew = cabinCrew.sort((a, b) => a.name.localeCompare(b.name));
+      const sortedPassengers = passengers.sort((a, b) => a.name.localeCompare(b.name));
+
+      // Combine the sorted arrays
+      const combinedRoster = [...sortedPilots, ...sortedCabinCrew, ...sortedPassengers];
+
   
       // Send the response
       res.json(combinedRoster);
