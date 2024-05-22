@@ -65,52 +65,59 @@ module.exports = function createCabinCrewInfoRouter(supabaseKey) {
 
   router.post('/add-many-crew-member', async (req, res) => {
     try {
-        let { limit } = req.query;
-
-        // Set default value for limit if not specified
-        if (!limit || isNaN(limit)) {
-            limit = 10;
-        }
-
-        const limitNumber = parseInt(limit);
-
-        const { data: lastCrewMember, error: lastCrewMemberError } = await supabase
-          .from('people')
-          .select('id')
-          .order('id', { ascending: false })
-          .limit(1);
-
-        if (lastCrewMemberError) {
-          throw lastCrewMemberError;
-        }
-        // Calculate the next available id
-        const nextId = lastCrewMember ? lastCrewMember[0].id + 1 : 1;
-
-        // Create an array to store the new crew members
-        const newCrewMembers = [];
-
-        // Generate random pilots based on the limit
-        for (let i = 0; i < limitNumber; i++) {
-            const newCrewMember = CabinCrew.generateRandom();
-            newCrewMember.id = nextId + i; // Increment the id for each new cabin crew member
-            newCrewMembers.push(newCrewMember);
-        }
-
-        // Insert the crew members into the Supabase table
-        const { data: insertedCrewMembers, error: insertError } = await supabase
-            .from('cabin_crew')
-            .insert(newCrewMembers);
-
-        if (insertError) {
-            throw insertError;
-        }
-
-        res.status(201).json({ message: 'Crew members added successfully', crewMembers: newCrewMembers });
+      let { limit } = req.query;
+  
+      // Set default value for limit if not specified
+      if (!limit || isNaN(limit)) {
+        limit = 10;
+      }
+  
+      const limitNumber = parseInt(limit);
+  
+      const { data: lastCrewMember, error: lastCrewMemberError } = await supabase
+        .from('people')
+        .select('id')
+        .order('id', { ascending: false })
+        .limit(1);
+  
+      if (lastCrewMemberError) {
+        throw lastCrewMemberError;
+      }
+  
+      // Calculate the next available id
+      let uId;
+      if (lastCrewMember && lastCrewMember.length > 0) {
+        uId = lastCrewMember[0].id + 1;
+      } else {
+        uId = 1;
+      }
+  
+      // Create an array to store the new crew members
+      const newCrewMembers = [];
+  
+      // Generate random pilots based on the limit
+      for (let i = 0; i < limitNumber; i++) {
+        const newCrewMember = CabinCrew.generateRandom();
+        newCrewMember.id = uId + i; // Increment the id for each new cabin crew member
+        newCrewMembers.push(newCrewMember);
+      }
+  
+      // Insert the crew members into the Supabase table
+      const { data: insertedCrewMembers, error: insertError } = await supabase
+        .from('cabin_crew')
+        .insert(newCrewMembers);
+  
+      if (insertError) {
+        throw insertError;
+      }
+  
+      res.status(201).json({ message: 'Crew members added successfully', crewMembers: newCrewMembers });
     } catch (error) {
-        console.error('Error adding crew members:', error.message);
-        res.status(500).json({ error: 'Internal server error' });
+      console.error('Error adding crew members:', error.message);
+      res.status(500).json({ error: 'Internal server error' });
     }
-});
+  });
+  
 
   
     

@@ -72,6 +72,7 @@ module.exports = function createMainSystemRouter(supabaseKey) {
         params: { flightnum: flight_num },
         headers: { 'Content-Type': 'application/json' }
       });
+      const passengers = passengersResponse.data;
       const passengerids = passengersResponse.data.map(passenger => passenger.id);
 
 
@@ -86,7 +87,12 @@ module.exports = function createMainSystemRouter(supabaseKey) {
           throw lastCrewMemberError;
         }
         // Calculate the next available id
-        const nextId = lastCrewMember ? lastCrewMember[0].rosterid + 1 : 1;
+        let nextId;
+      if (lastCrewMember && lastCrewMember.length > 0) {
+        nextId = lastCrewMember[0].id + 1;
+      } else {
+        nextId = 1;
+      }
 
       // Insert the new flight roster data
         const { error: insertError } = await supabase

@@ -191,6 +191,35 @@ module.exports = function createFlightInfoRouter(supabaseKey) {
             console.error('Error adding passanger information:', error.message);
             res.status(500).json({ error: 'Internal server error' });
           }
+        });
+        router.put('/update-passengers', async (req, res) => {
+            try {
+                const { passengers } = req.body; // Expecting an array of passenger objects
+        
+                // Iterate over the list of passengers and update each one
+                const updates = passengers.map(async (passenger) => {
+                    const { id, ...updateData } = passenger;
+        
+                    // Perform the update operation
+                    const { data, error } = await supabase
+                        .from('passengers')
+                        .update(updateData)
+                        .eq('id', id);
+        
+                    if (error) {
+                        throw error;
+                    }
+                    return data;
+                });
+        
+                // Wait for all updates to complete
+                const updatedPassengers = await Promise.all(updates);
+        
+                res.status(200).json({ message: 'Passengers updated successfully', updatedPassengers });
+            } catch (error) {
+                console.error('Error updating passenger information:', error.message);
+                res.status(500).json({ error: 'Internal server error' });
+            }
         });        
 
     return router;
