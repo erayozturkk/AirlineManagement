@@ -10,27 +10,48 @@
     display: flex;
     background-color: #333;
     color: white;
-    padding: 10px 20px;
+    padding: 10px 25px;
     align-items: center;
     border-radius: 10px;
+    justify-content: space-between;
+}
+
+.viewflight-navbar .left-section {
+    display: flex;
+    align-items: center;
 }
 
 .viewflight-navbar .logo {
     margin-right: 20px;
-    width: 50px;
+    max-width: 50px;
+    width: auto;
     height: auto;
+    margin-bottom: 8%;
+    margin-top: -5%;
 }
 
 .viewflight-navbar .nav-item {
     color: #333;
     text-decoration: none;
     padding: 10px 15px;
+    margin: 0;
     background-color: white;
     border-radius: 5px;
-    
 }
 
+.viewflight-navbar .nav-item:hover {
+    background-color: #555;
+}
 
+.viewflight-navbar .header {
+    flex-grow: 1;
+    text-align: center;
+}
+
+.right-section {
+    display: flex;
+    align-items: center;
+}
 
 .flight-details {
     margin: 20px;
