@@ -22,10 +22,12 @@
 }
 
 .viewflight-navbar .nav-item {
-    color: white;
+    color: #002277;
     text-decoration: none;
-    margin-right: 20px;
     padding: 10px 15px;
+    background-color: white;
+    border-radius: 5px;
+    
 }
 
 
