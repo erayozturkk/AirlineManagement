@@ -1,5 +1,30 @@
 const faker = require('faker');
-const {  commonLanguages, aircrafts } = require('./CabinCrew')
+const {  commonLanguages } = require('./CabinCrew')
+const { createClient } = require('@supabase/supabase-js');
+const path = require('path');
+require('dotenv').config({ path: path.resolve(__dirname, 'crew.env') });
+
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_KEY;
+const supabase = createClient(supabaseUrl, supabaseKey);
+
+let aircrafts = [];
+
+// Function to fetch aircrafts data
+async function fetchAircrafts() {
+  const { data: aircraftData, error: aircraftError } = await supabase
+    .from('aircrafts')
+    .select('vehicletype');
+    
+  if (aircraftError) {
+    throw aircraftError;
+  }
+
+  aircrafts = aircraftData.map(aircraft => aircraft.vehicletype);
+}
+
+// Call fetchAircrafts to initialize aircrafts array
+fetchAircrafts().catch(console.error);
 
 class Pilot {
     constructor(id, name, age, gender, nationality, languages, vehicleRestriction, seniorityLevel) {
