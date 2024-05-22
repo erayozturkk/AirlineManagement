@@ -1,17 +1,33 @@
 .view-flight-page {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+    color: #002277;
+    text-decoration: none;
+    padding: 10px 15px;
+    background-color: white;
+    border-radius: 5px;
 }
 
 .viewflight-navbar {
     display: flex;
-    justify-content: space-between;
-    width: 100%;
-    padding: 10px;
-    background-color: blue;
-    border-bottom: 1px solid #e9ecef;
+    background-color: #333;
+    color: white;
+    padding: 10px 20px;
+    align-items: center;
+    border-radius: 10px;
 }
+
+.viewflight-navbar .logo {
+    margin-right: 20px;
+    width: 50px;
+    height: auto;
+}
+
+.viewflight-navbar .nav-item {
+    color: white;
+    text-decoration: none;
+    margin-right: 20px;
+    padding: 10px 15px;
+}
+
 
 
 .flight-details {
@@ -33,7 +49,6 @@
 .flight-details p {
     font-size: 20px;
     margin: 10px;
-
 }
 
 .view-buttons button {

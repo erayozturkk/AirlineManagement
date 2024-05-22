@@ -68,9 +68,11 @@ const DashboardAdmin = () => {
     return (
         <div className='dashboard-page'>
             <nav className='dashboard-navbar'>
-                <Link to="/" className='nav-item'>Home</Link>
-                <Link to="/management" className='nav-item'>User Management</Link>
-                <Link to="/settings" className='nav-item'>Settings</Link>
+                <Link to="/dashboard">
+                    <img src="./logo.png" alt="Logo" className="logo" />
+                </Link>
+                <Link to="/dashboard" className='nav-item'>Home</Link>
+                <span className='nav-item'>Flight Details</span>
             </nav>
             <div className='dashboard-header'>
                 <h1>Admin Dashboard</h1>
