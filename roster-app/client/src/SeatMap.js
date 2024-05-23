@@ -1,24 +1,33 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import './SeatMap.css';
-
-const SeatMap = ({ flight }) => {
+const SeatMap = ({ flightRoster }) => {
     const [seatingPlan, setSeatingPlan] = useState(null);
+    const [aircraftInfo, setAircraftInfo] = useState(null);
+    const vehicleType = flightRoster?.vtype; // Ensure flightRoster is not null
 
     useEffect(() => {
-        const fetchSeatingPlan = async () => {
+        const fetchAircraftInfo = async (vehicle_type) => {
             try {
-                const encoded_vehicle_type = encodeURIComponent(flight.vehicle_type);
-                const response = await axios.get(`http://localhost:5001/aircraft/aircraft_info/${encoded_vehicle_type}`);
+                const response = await axios.get('http://localhost:5001/aircraft/aircraft_info', {
+                    params: {
+                        vehicle_type: vehicle_type,
+                    },
+                });
                 console.log('Response:', response.data[0]);
-                setSeatingPlan(response.data[0].seatingplan);
+                setAircraftInfo(response.data[0]);
+                setSeatingPlan(response.data[0].seatingplan)
+
             } catch (error) {
-                console.error('Error fetching seating plan:', error);
+                console.error('Error fetching aircraft info:', error);
             }
         };
-        fetchSeatingPlan();
 
-    }, [flight.vehicle_type]);
+        if (vehicleType) {
+            fetchAircraftInfo(vehicleType);
+            console.log('Aircraft: ', aircraftInfo, 'SeatingPlan:', seatingPlan)
+        }
+    }, [vehicleType]); // Only re-run the effect if vehicleType changes
 
     return (
         <div className="seat-map-container">
@@ -33,6 +42,7 @@ const SeatMap = ({ flight }) => {
         </div>
     );
 };
+
 
 
 
