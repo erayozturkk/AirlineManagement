@@ -15,7 +15,7 @@ module.exports = function createFlightInfoRouter(supabaseKey) {
     router.get('/get-passengers', async (req, res) => {
         try {
             const {
-                passengerid,
+                id,
                 flightnum,
                 name,
                 age,
@@ -24,13 +24,13 @@ module.exports = function createFlightInfoRouter(supabaseKey) {
                 seattype,
                 seatnumber,
                 parentid,
-                affiliated_passenger
+                affiliatedpassenger
             } = req.query;
 
             let query = supabase.from('passengers').select('*');
             
             const queryParams = {
-                passengerid,
+                id,
                 flightnum,
                 name,
                 age,
@@ -39,7 +39,7 @@ module.exports = function createFlightInfoRouter(supabaseKey) {
                 seattype,
                 seatnumber,
                 parentid,
-                affiliated_passenger
+                affiliatedpassenger
             };
             Object.keys(queryParams).forEach(key => {
                 if (queryParams[key]) {
@@ -72,7 +72,8 @@ module.exports = function createFlightInfoRouter(supabaseKey) {
                 seattype,
                 seatnumber,
                 parentid,
-                limit
+                limit,
+                affiliatedpassenger
             } = req.query;
           
         let limitNumber;
@@ -82,17 +83,10 @@ module.exports = function createFlightInfoRouter(supabaseKey) {
         else{
           limitNumber=5;
         }
-<<<<<<< Updated upstream
-        const addedPassengers = [];
-          for (let i = 0; i < limitNumber; i++) {
-            //slows down too much need to do it only once       
-            const { data: existingFlights, error: flightInfoError } = await supabase
-=======
         const { data: existingFlights, error: flightInfoError } = await supabase
->>>>>>> Stashed changes
-            .from('flight_info')
-            .select('flight_num,shared_flight_number,vehicle_type')
-            .eq('flight_num', flightnum);
+        .from('flight_info')
+        .select('flight_num, shared_flight_number, vehicle_type')
+        .or(`flight_num.eq.${flightnum},shared_flight_number.eq.${flightnum}`);
         if (flightInfoError) {
             throw flightInfoError;
         }
@@ -100,8 +94,34 @@ module.exports = function createFlightInfoRouter(supabaseKey) {
         if (existingFlights.length === 0) {
             return res.status(400).json({ error: 'Flight number not found' });
         }
+
+
+
         const vehicleType = existingFlights[0].vehicle_type;
+
+        const { data: aircraftData, error: aircraftDataError } = await supabase
+        .from('aircrafts')
+        .select('seatingplan, numberofseats')
+        .eq('vehicletype', vehicleType);
+
+        if (aircraftDataError) {
+            throw aircraftDataError;
+        }
+        const max_seats = aircraftData[0].numberofseats;
+        const seatingPlan = aircraftData[0].seatingplan;
         const addedPassengers = [];
+        const { data: lastCrewMember, error: lastCrewMemberError } = await supabase
+        .from('people')
+        .select('id')
+        .order('id', { ascending: false })
+        .limit(1);
+
+        if (lastCrewMemberError) {
+            throw lastCrewMemberError;
+        }
+
+        // Calculate the next available id
+        let nextId = lastCrewMember.length > 0 ? lastCrewMember[0].id + 1 : 1;
           for (let i = 0; i < limitNumber; i++) {
         // Generate random passenger information if not provided
         const passengerInfo = {
@@ -112,9 +132,9 @@ module.exports = function createFlightInfoRouter(supabaseKey) {
             gender: gender ? gender : faker.random.arrayElement(["Male", "Female"]),
             nationality: nationality ? nationality : faker.address.country(),
             seattype: seattype ? seattype : null, // Will be calculated later if necessary
-            seatnumber: seatnumber ? seatnumber : null, // Will be assigned later if necessary
+            seatnumber: seatnumber ? parseInt(seatnumber) : null, // Will be assigned later if necessary
             parentid: parentid ? parentid : null,
-            affiliated_passenger: affiliated_passenger ? affiliated_passenger : null
+            affiliatedpassenger: affiliatedpassenger ? affiliatedpassenger.map(id => parseInt(id)) : null
         };
         if(parentid){
             if(age && (age>2)){
@@ -132,7 +152,7 @@ module.exports = function createFlightInfoRouter(supabaseKey) {
         if (seatnumber) {
 
             // Chechk if there is a affiliated_passenger even if the passanger has a seat
-            if(affiliated_passenger){
+            if(affiliatedpassenger){
                 return res.status(400).json({ error: 'Passangers cant choose to sit next to affiliated passengers if they have a seat number' });
             }
 
@@ -154,16 +174,7 @@ module.exports = function createFlightInfoRouter(supabaseKey) {
         
 
         // Determine seating plan based on vehicle type
-        const { data: aircraftData, error: aircraftDataError } = await supabase
-            .from('aircrafts')
-            .select('seatingplan, numberofseats')
-            .eq('vehicletype', vehicleType);
 
-        if (aircraftDataError) {
-            throw aircraftDataError;
-        }
-        const max_seats = aircraftData[0].numberofseats;
-        const seatingPlan = aircraftData[0].seatingplan;
         if( seatnumber && (seatnumber > max_seats)){
             throw new Error('Seat number exceeds maximum.')
             
@@ -173,6 +184,11 @@ module.exports = function createFlightInfoRouter(supabaseKey) {
         const seatsPerRow = Layout.split('-').reduce((total, num) => total + parseInt(num), 0);
         const businessmax=seatsPerRow*seatingPlan["business"].rows;
         // Calculate seat type if not provided
+        if(!seattype && !parentid){
+            return res.status(400).json({ error: 'Seat type not specified' });
+        }
+
+
         if (!seattype && seatnumber) {     
             if(seatnumber<=businessmax){
                 passengerInfo.seattype="business";
@@ -187,29 +203,19 @@ module.exports = function createFlightInfoRouter(supabaseKey) {
         if(seattype === "economy" && seatnumber < businessmax){
             throw new Error('Seat type does not match seat number.')
         }
-        const { data: lastCrewMember, error: lastCrewMemberError } = await supabase
-        .from('people')
-        .select('id')
-        .order('id', { ascending: false })
-        .limit(1);
-
-        if (lastCrewMemberError) {
-            throw lastCrewMemberError;
-        }
-
-        // Calculate the next available id
-        const nextId = lastCrewMember.length > 0 ? lastCrewMember[0].id + 1 : 1;
         // Insert the passenger information into the Supabase table
         passengerInfo.id=nextId;
+        nextId++;
+
+        addedPassengers.push(passengerInfo);
+
+        }
         const { data: insertedPassengerInfo, error: insertError } = await supabase
-            .from('passengers')
-            .insert([passengerInfo]);
+        .from('passengers')
+        .insert(addedPassengers);
 
         if (insertError) {
             throw insertError;
-        }
-        addedPassengers.push(passengerInfo);
-
         }
         res.status(201).json({ message: 'Passenger information added successfully', addedPassengers });
         }catch (error) {
@@ -219,10 +225,10 @@ module.exports = function createFlightInfoRouter(supabaseKey) {
         });
         router.put('/update-passengers', async (req, res) => {
             try {
-                const { passengers } = req.body; // Expecting an array of passenger objects
+                const { passengerarray } = req.body; // Expecting an array of passenger objects
         
                 // Iterate over the list of passengers and update each one
-                const updates = passengers.map(async (passenger) => {
+                const updates = passengerarray.map(async (passenger) => {
                     const { id, ...updateData } = passenger;
         
                     // Perform the update operation
@@ -240,7 +246,7 @@ module.exports = function createFlightInfoRouter(supabaseKey) {
                 // Wait for all updates to complete
                 const updatedPassengers = await Promise.all(updates);
         
-                res.status(200).json({ message: 'Passengers updated successfully', updatedPassengers });
+                res.status(200).json({ message: 'Passengers updated successfully' });
             } catch (error) {
                 console.error('Error updating passenger information:', error.message);
                 res.status(500).json({ error: 'Internal server error' });

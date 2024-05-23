@@ -19,6 +19,8 @@ module.exports = function createFlightInfoRouter(supabaseKey) {
               time,
               origin_country,
               origin_city,
+              duration,
+              distance,
               origin_airport_name,
               origin_airport_code,
               destination_country,
@@ -38,6 +40,8 @@ module.exports = function createFlightInfoRouter(supabaseKey) {
               time,
               origin_country,
               origin_city,
+              duration,
+              distance,
               origin_airport_name,
               origin_airport_code,
               destination_country,
@@ -91,7 +95,7 @@ router.post('/add-flight-info', async (req, res) => {
       limitNumber=parseInt(limit);
     }
     else{
-      limitNumber=5;
+      limitNumber=1;
     }
     const addedFlights = [];
       for (let i = 0; i < limitNumber; i++) {
@@ -136,21 +140,6 @@ router.post('/add-flight-info', async (req, res) => {
           toinTime = generateRandomTime();
         }
 
-
-        //ganerate random duration if not provided in request
-        let toinDuration;
-        if(duration){
-          toinDuration=duration;
-        }
-        else{
-          // Generate a random distance between 800 and 8000
-          const distance = Math.floor(Math.random() * (8000 - 800 + 1)) + 800;
-          // Generate a random duration based on the distance theese values are expected speeds of a passanger plane
-          const distanceFactor = Math.floor(Math.random() * (575 - 480 + 1)) + 480;
-          toinDuration = Math.ceil(distance / distanceFactor) * 60;
-    
-        }
-
         let toinDistance;
         if(distance){
           toinDistance=distance;
@@ -159,6 +148,19 @@ router.post('/add-flight-info', async (req, res) => {
           // Generate a random distance between 800 and 8000
            toinDistance = Math.floor(Math.random() * (8000 - 800 + 1)) + 800;
         }
+        //ganerate random duration if not provided in request
+        let toinDuration;
+        if(duration){
+          toinDuration=duration;
+        }
+        else{
+
+          // Generate a random duration based on the distance theese values are expected speeds of a passanger plane
+          const distanceFactor = Math.floor(Math.random() * (575 - 480 + 1)) + 480;
+          toinDuration = Math.ceil(toinDistance / distanceFactor) * 60;
+        }
+
+
 
 
         //ganerate random airport if not provided in request
@@ -239,7 +241,7 @@ router.post('/add-flight-info', async (req, res) => {
             throw new Error(`Provided vehicletype "${vehicle_type}" is not in the database`)
           }
           else{
-            toinVehicle=matchedVehicle;
+            toinVehicle=vehicle_type;
           }
         }
         else{

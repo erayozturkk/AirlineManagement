@@ -49,24 +49,31 @@ module.exports = function createMainSystemRouter(supabaseKey) {
         headers: { 'Content-Type': 'application/json' }
       });
   
-      const flightInfo = flightInfoResponse.data;
+      const flightInfo = flightInfoResponse.data[0];
       const vtype = flightInfo['vehicle_type'];
       const range = flightInfo['distance'];
-  
+      const R_date = flightInfo['date'];
+      const R_time = flightInfo['time'];
+      const R_duration = flightInfo['duration'];
+      //fetch seating plan
+      const{ data: aircrafts, error: aircraftError } = await supabase
+      .from('aircrafts')
+      .select('*')
+      .eq('vehicletype',vtype)
+      ;
+      if(aircraftError) {
+        throw aircraftError;
+      }
+      const max_seats = aircrafts[0].numberofseats;
+      const seatingPlan = aircrafts[0].seatingplan;
+      const businessmax= seatingPlan["business"].rows*(seatingPlan['business'].layout.split('-').reduce((total, num) => total + parseInt(num), 0));
       // Fetch flight crew information
-      const flightCrewResponse = await axios.get('http://localhost:5001/flight-crew/combined-crew-members', {
-        params: { vehicleRestriction: vtype, allowedRange: range },
-        headers: { 'Content-Type': 'application/json' }
-      });
-      const flightCrewids = flightCrewResponse.data;
-  
+      const flightCrewids = (await selectCrew(vtype,range,R_date,R_time,R_duration)).map(crew => crew.id);
       // Fetch cabin crew information
-      const cabinCrewResponse = await axios.get('http://localhost:5001/cabin-crew/combined-crew-members', {
-        params: { vehiclerestriction: vtype },
-        headers: { 'Content-Type': 'application/json' }
-      });
-      const cabinCrewids = cabinCrewResponse.data;
-  
+      let cabincrewdata = await selectCabinCrew(vtype,R_date,R_time,R_duration);
+      const cabinCrewids = cabincrewdata[0].map(crew => crew.id),
+            flightMenu = cabincrewdata[1];
+     
       // Fetch passengers information
       const passengersResponse = await axios.get('http://localhost:5001/passenger-info/get-passengers', {
         params: { flightnum: flight_num },
@@ -74,16 +81,85 @@ module.exports = function createMainSystemRouter(supabaseKey) {
       });
       const passengers = passengersResponse.data;
       const passengerids = passengersResponse.data.map(passenger => passenger.id);
-      
+      const occupiedseats = passengersResponse.data
+      .filter(passenger => passenger.seatnumber !== null)
+      .map(passenger => passenger.seatnumber);
+
+
       for(let i= 0;i<passengers.length;i++){
+        let changed=false;
         let passenger = passengers[i];
+        if(passenger.parentid){break}
         if(!passenger.seatnumber){
-          if(passenger.affiliated_passenger){
-            
+          
+          if(passenger.affiliatedpassenger){                                         ///////if seatnumber does not exist
+            for(let affiliatedpassengerid of passenger.affiliatedpassenger) {
+              if(passengerids.includes(affiliatedpassengerid)){
+                let affiliatedPassenger = passengers.find(p => p.id === affiliatedpassengerid);
+                if(affiliatedPassenger.seatnumber && (affiliatedPassenger.seattype===passenger.seattype)){
+                  const layout = seatingPlan[affiliatedPassenger.seattype].layout;
+                  const seatsPerRow = layout.split('-').reduce((total, num) => total + parseInt(num), 0);
+                  if(affiliatedPassenger.seatnumber%seatsPerRow===1){
+                    if(!occupiedseats.includes(affiliatedPassenger.seatnumber + 1)){
+                      passenger.seatnumber=affiliatedPassenger.seatnumber + 1;
+                      changed=true;
+                      break;
+                    }
+                  }
+                  else if(affiliatedPassenger.seatnumber%seatsPerRow===0){;
+                    if(!occupiedseats.includes(affiliatedPassenger.seatnumber - 1)){
+                      passenger.seatnumber=affiliatedPassenger.seatnumber - 1;
+                      changed=true;
+                      break;
+                    }
+                  }
+                  else{
+                    if(!occupiedseats.includes(affiliatedPassenger.seatnumber + 1)){
+                      passenger.seatnumber=affiliatedPassenger.seatnumber + 1;
+                      changed=true;
+                      break;
+                    }
+                    else if(!occupiedseats.includes(affiliatedPassenger.seatnumber - 1)){
+                      passenger.seatnumber=affiliatedPassenger.seatnumber - 1;
+                      changed=true;
+                      break;
+                    }
+                  }
+                }
+              }
+            }
           }
         }
-      }
 
+
+
+        if(!changed){
+          
+          if(passenger.seattype==['business']){
+            for(let i=1;i<=businessmax;i++){
+              if(!occupiedseats.includes(i)){
+                passenger.seatnumber=i;
+                break
+              }
+            }
+          }
+          if(passenger.seattype==['economy']){
+            for(let i=businessmax+1;i<=max_seats;i++){
+              if(!occupiedseats.includes(i)){
+                passenger.seatnumber=i;
+                break
+              }
+            }
+          }
+        }
+        occupiedseats.push(passenger.seatnumber);
+        const passengerarray = [] ;
+        passengerarray.push(passenger);
+        const UpdatedPassengerResponse = await axios.put('http://localhost:5001/passenger-info/update-passengers', 
+        { passengerarray }, {
+        headers: { 'Content-Type': 'application/json' }
+    });
+      }
        // Fetch the last roster_id
        const { data: lastCrewMember, error: lastCrewMemberError } = await supabase
        .from('flightrosters')
@@ -97,12 +173,13 @@ module.exports = function createMainSystemRouter(supabaseKey) {
         // Calculate the next available id
         let nextId;
       if (lastCrewMember && lastCrewMember.length > 0) {
-        nextId = lastCrewMember[0].id + 1;
+        nextId = lastCrewMember[0].rosterid + 1;
       } else {
         nextId = 1;
       }
 
       // Insert the new flight roster data
+      
         const { error: insertError } = await supabase
         .from('flightrosters')
         .insert([
@@ -110,8 +187,9 @@ module.exports = function createMainSystemRouter(supabaseKey) {
             rosterid: nextId,
             flightnum: flight_num,
             pilotids: flightCrewids,
-            cabincrewrids: cabinCrewids,
-            passengerids: passengerids
+            cabincrewids: cabinCrewids,
+            passengerids: passengerids,
+            flightmenu: flightMenu
           }
         ]);
 
@@ -125,6 +203,35 @@ module.exports = function createMainSystemRouter(supabaseKey) {
       res.status(500).json({ error: 'Internal server error' });
     }
   });
+
+  router.delete('/delete-flight-roster', async (req, res) => {
+    try {
+      const { flight_num } = req.query;
+      
+      if (!flight_num) {
+        return res.status(400).json({ error: 'Flight number is required' });
+      }
+  
+      let a=flight_num.toString();
+  
+      const { error } = await supabase
+        .from('flightrosters')
+        .delete()
+        .eq('flightnum', a);
+
+  
+      if (error) {
+        throw error;
+      }
+
+  
+      res.status(200).json({ message: 'Flight roster deleted successfully' });
+    } catch (error) {
+      console.error('Error deleting flight roster:', error.message);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+  
   router.get('/get-tabular-view', async (req, res) => {
     try {
       const { flight_num } = req.query; // Use query parameters for GET requests
@@ -152,18 +259,18 @@ module.exports = function createMainSystemRouter(supabaseKey) {
   
       const pilotIds = pilotData.length > 0 ? pilotData[0].pilotids : [];
   
-      // Fetch cabincrewrids
+      // Fetch cabincrewids
       const { data: cabinCrewData, error: cabinCrewError } = await supabase
         .from('flightrosters')
-        .select('cabincrewrids')
+        .select('cabincrewids')
         .eq('flightnum', flight_num);
   
       if (cabinCrewError) {
-        console.error('Error fetching cabincrewrids:', cabinCrewError.message);
+        console.error('Error fetching cabincrewids:', cabinCrewError.message);
         return res.status(500).json({ error: 'Internal server error' });
       }
   
-      const cabinCrewIds = cabinCrewData.length > 0 ? cabinCrewData[0].cabincrewrids : [];
+      const cabinCrewIds = cabinCrewData.length > 0 ? cabinCrewData[0].cabincrewids : [];
   
       // Fetch pilot details from the defined endpoint
       const pilotDetailsResponse = await axios.get('http://localhost:5001/flight-crew/get-crew-members-list', {
@@ -246,18 +353,18 @@ module.exports = function createMainSystemRouter(supabaseKey) {
   
       const pilotIds = pilotData.length > 0 ? pilotData[0].pilotids : [];
   
-      // Fetch cabincrewrids
+      // Fetch cabincrewids
       const { data: cabinCrewData, error: cabinCrewError } = await supabase
         .from('flightrosters')
-        .select('cabincrewrids')
+        .select('cabincrewids')
         .eq('flightnum', flight_num);
   
       if (cabinCrewError) {
-        console.error('Error fetching cabincrewrids:', cabinCrewError.message);
+        console.error('Error fetching cabincrewids:', cabinCrewError.message);
         return res.status(500).json({ error: 'Internal server error' });
       }
   
-      const cabinCrewIds = cabinCrewData.length > 0 ? cabinCrewData[0].cabincrewrids : [];
+      const cabinCrewIds = cabinCrewData.length > 0 ? cabinCrewData[0].cabincrewids : [];
 
   
       // Fetch pilot details from the defined endpoint
@@ -295,7 +402,191 @@ module.exports = function createMainSystemRouter(supabaseKey) {
     }
   });
   
+  async function getFilteredCrewMembers(vehicleRestriction, allowedRange, flightDate, flightTime, flightDuration) {
+    try {
+        // Fetch all matching crew members
+        const crewResponse = await axios.get('http://localhost:5001/flight-crew/find-crew-members', {
+            params: { vehicleRestriction: vehicleRestriction, allowedRange: allowedRange },
+            headers: { 'Content-Type': 'application/json' }
+        });
+        const crewMembers = crewResponse.data;
+
+        const availableCrew = [];
+        let checkedCrewIds = new Set();
+
+        for (let crewMember of crewMembers) {
+            const crewId = crewMember.id;
+
+            if (checkedCrewIds.has(crewId)) continue;
+            checkedCrewIds.add(crewId);
+
+            const { data: existingRosters, error: rosterError } = await supabase
+              .from('flightrosters')
+              .select('*')
+              .contains('pilotids', [parseInt(crewId)]);
+
+            if (rosterError) {
+                throw rosterError;
+            }
+            let isAvailable = true;
+
+            for (let roster of existingRosters) {
+                const { data: flightInfo, error: flightInfoError } = await supabase
+                    .from('flight_info')
+                    .select('date, time, duration')
+                    .eq('flight_num', roster.flightnum)
+                    .single();
+
+                if (flightInfoError) {
+                    throw flightInfoError;
+                }
+
+                if (isTimeConflict(flightDate, flightTime, flightDuration, flightInfo.date, flightInfo.time, flightInfo.duration)) {
+                    isAvailable = false;
+                    break;
+                }
+            }
+
+            if (isAvailable) {
+                availableCrew.push(crewMember);
+            }
+        }
+
+        return availableCrew;
+    } catch (error) {
+        console.error('Error fetching and filtering crew members:', error.message);
+        throw error;
+    }
+}
+
+async function getFilteredCabinCrewMembers(vehicleRestriction, flightDate, flightTime, flightDuration) {
+  try {
+      const cabinCrewResponse = await axios.get('http://localhost:5001/cabin-crew/find-crew-members', {
+          params: { vehiclerestriction: vehicleRestriction },
+          headers: { 'Content-Type': 'application/json' }
+      });
+      const cabinCrewMembers = cabinCrewResponse.data;
+
+      const availableCabinCrew = [];
+      let checkedCrewIds = new Set();
+
+      for (let crewMember of cabinCrewMembers) {
+          const crewId = crewMember.id;
+
+          if (checkedCrewIds.has(crewId)) continue;
+          checkedCrewIds.add(crewId);
+
+          const { data: existingRosters, error: rosterError } = await supabase
+          .from('flightrosters')
+          .select('*')
+          .filter('cabincrewids', 'cs', `{${crewId}}`);
+
+          if (rosterError) {
+              throw rosterError;
+          }
+          
+          let isAvailable = true;
+
+          for (let roster of existingRosters) {
+              const { data: flightInfo, error: flightInfoError } = await supabase
+                  .from('flight_info')
+                  .select('date, time, duration')
+                  .eq('flight_num', roster.flightnum)
+                  .single();
+
+              if (flightInfoError) {
+                  throw flightInfoError;
+              }
+              
+              if (isTimeConflict(flightDate, flightTime, flightDuration, flightInfo.date, flightInfo.time, flightInfo.duration)) {
+                  isAvailable = false;
+                  break;
+              }
+          }
+
+          if (isAvailable) {
+              availableCabinCrew.push(crewMember);
+          }
+      }
+
+      return availableCabinCrew;
+  } catch (error) {
+      console.error('Error fetching and filtering cabin crew members:', error.message);
+      throw error;
+  }
+}
+
+// Helper function to check if given times conflict
+function isTimeConflict(R_date, R_time, R_duration, C_date, C_time, C_duration) {
+    const startR = new Date(`${R_date}T${R_time}`);
+    const endR = new Date(startR.getTime() + R_duration * 60 * 1000);
+
+    const startC = new Date(`${C_date}T${C_time}`);
+    const endC = new Date(startC.getTime() + C_duration * 60 * 1000);
+
+    return !(startR >= endC || startC >= endR);
+}
+
+
+async function selectCrew(vehicleRestriction, allowedRange, flightDate, flightTime, flightDuration) {
+  const availableCrew = await getFilteredCrewMembers(vehicleRestriction, allowedRange, flightDate, flightTime, flightDuration);
   
+  const seniorPilots = availableCrew.filter(crew => crew.seniorityLevel === 'Senior');
+  const juniorPilots = availableCrew.filter(crew => crew.seniorityLevel === 'Junior');
+  const trainees = availableCrew.filter(crew => crew.seniorityLevel === 'Trainee');
+  if (seniorPilots.length < 1 || juniorPilots.length < 1) {
+      throw Error('Not enough senior or junior pilots available');
+  }
+
+  const selectedCrew = [];
+  selectedCrew.push(seniorPilots[0]); // At least one senior pilot
+  selectedCrew.push(juniorPilots[0]); // At least one junior pilot
+
+  let traineeCount = 0;
+  for (let trainee of trainees) {
+      if (traineeCount < 2) {
+          selectedCrew.push(trainee);
+          traineeCount++;
+      } else {
+          break;
+      }
+  }
+
+  return selectedCrew;
+}
+
+async function selectCabinCrew(vehicleRestriction, flightDate, flightTime, flightDuration) {
+  const availableCabinCrew = await getFilteredCabinCrewMembers(vehicleRestriction, flightDate, flightTime, flightDuration);
+
+  const seniorAttendants = availableCabinCrew.filter(crew => crew.attendanttype === 'chief');
+  const juniorAttendants = availableCabinCrew.filter(crew => crew.attendanttype === 'regular');
+  const chefs = availableCabinCrew.filter(crew => crew.attendanttype === 'chef');
+
+  if (seniorAttendants.length < 1 || juniorAttendants.length < 4) {
+      throw new Error('Not enough senior or junior attendants available');
+  }
+
+  const selectedCrew = [];
+  selectedCrew.push(...seniorAttendants.slice(0, Math.min(seniorAttendants.length, 4))); // 1-4 senior attendants
+  selectedCrew.push(...juniorAttendants.slice(0, Math.min(juniorAttendants.length, 16))); // 4-16 junior attendants
+  const flightmenu = [];
+  const chefCount = Math.min(chefs.length, 2);
+  for (let i = 0; i < chefCount; i++) {
+      const chef = chefs[i];
+      selectedCrew.push(chef);
+
+      // Add a random dish from the chef to the flight menu
+      const dish = chef.recipes[Math.floor(Math.random() * chef.recipes.length)];
+      if(!flightmenu.includes(dish)){
+        flightmenu.push(dish);
+      }
+  }
+
+  return [selectedCrew,flightmenu];
+}
+
+
+
 
   return router;
 };
