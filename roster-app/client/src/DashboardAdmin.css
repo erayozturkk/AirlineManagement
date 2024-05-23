@@ -19,16 +19,26 @@ body.dashboard-page {
 
 .dashboard-navbar .logo {
     margin-right: 20px;
-    width: 50px;
+    max-width: 50px;
+    width: auto;
     height: auto;
+    margin-bottom: 8%;
+    margin-top: -5%;
 }
 
 .nav-item {
-    color: #002277;
+    color: #333;
     text-decoration: none;
     padding: 10px 15px;
+    margin: 0;
     background-color: white;
     border-radius: 5px;
+}
+
+ .header {
+    flex-grow: 1;
+    text-align: center;
+    
 }
 
 .nav-item:hover {
@@ -40,7 +50,7 @@ body.dashboard-page {
     text-align: center;
     padding: 20px;
     background: #eee;
-    color: #002277
+    color: #333
 }
 
 /* Menu Styling */
@@ -70,7 +80,7 @@ body.dashboard-page {
 
 .dashboard-menu button {
     padding: 10px 20px;
-    background-color: #002277;
+    background-color: #333;
     color: white;
     border: none;
     cursor: pointer;
@@ -92,8 +102,8 @@ body.dashboard-page {
 .dashboard-menu-item label {
     text-align: center;
     border-radius: 5px;
-    border: solid 1px #002277;
-    background-color: #002277;
+    border: solid 1px #333;
+    background-color: #333;
     color: white;
     border-radius: 10px;
 }
@@ -117,7 +127,7 @@ body.dashboard-page {
 
 .nav-item {
     text-decoration: none;
-    color: #007bff;
+    color: #333;
 }
 
 .dashboard-header {
@@ -162,7 +172,7 @@ body.dashboard-page {
 
 .result-buttons button {
     margin-left: 10px;
-    background-color: #002277;
+    background-color: #333;
     color: white;
     border: none;
     cursor: pointer;
@@ -178,6 +188,7 @@ body.dashboard-page {
     display: flex;
     justify-content: center;
     margin-bottom: 20px;
+    color: #333;
 }
 
 .search-toggle button {
@@ -187,8 +198,12 @@ body.dashboard-page {
 }
 
 .search-toggle .active {
-    background-color: #007bff;
+    background-color: #555;
     color: white;
+}
+
+.search-toggle button  {
+    color: #333;
 }
 
 .dashboard-menu form {

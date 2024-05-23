@@ -71,11 +71,11 @@ const DashboardAdmin = () => {
                 <Link to="/dashboard">
                     <img src="./logowhite.png" alt="Logo" className="logo" />
                 </Link>
+                <h1 className='header'>Admin Dashboard</h1>
                 <Link to="/dashboard" className='nav-item'>Home</Link>
-                <span className='nav-item'>Flight Details</span>
             </nav>
             <div className='dashboard-header'>
-                <h1>Admin Dashboard</h1>
+                
                 <p>Welcome Admin! Select a flight below.</p>
             </div>
             <div className="search-toggle">
@@ -205,4 +205,3 @@ const DashboardAdmin = () => {
 };
 
 export default DashboardAdmin;
-

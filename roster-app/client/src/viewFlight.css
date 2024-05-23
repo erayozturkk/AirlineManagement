@@ -6,6 +6,13 @@
     border-radius: 5px;
 }
 
+body.view-flight-page {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background: #f4f4f4;
+}
+
 .viewflight-navbar {
     display: flex;
     background-color: #333;
@@ -46,6 +53,7 @@
 .viewflight-navbar .header {
     flex-grow: 1;
     text-align: center;
+    margin: 0 20px; /* Add margin to ensure space around the header */
 }
 
 .right-section {
@@ -61,12 +69,6 @@
     font-family: Arial;
     border: 1px solid #717171;
     border-radius: 10px;
-}
-
-.flight-details h1 {
-    font-size: 30px;
-    margin: 10px;
-    border-bottom: 2px solid #717171;
 }
 
 .flight-details p {
@@ -91,4 +93,30 @@
     align-items: center;
     border: 1px solid #717171;
     border-radius: 10px;
+}
+
+.flight-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+    font-size: 18px;
+    text-align: left;
+}
+
+.flight-table th, .flight-table td {
+    padding: 12px 15px;
+    border: 1px solid #ddd;
+}
+
+.flight-table th {
+    background-color: #333;
+    color: white;
+}
+
+.flight-table tr:nth-of-type(even) {
+    background-color: #f3f3f3;
+}
+
+.flight-table tr:nth-of-type(odd) {
+    background-color: #fff;
 }

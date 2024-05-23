@@ -70,10 +70,3 @@ module.exports = function createFlightInfoRouter(supabaseKey) {
 
     return router;
 }
-
-
-
-
-
-
-

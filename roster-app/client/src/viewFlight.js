@@ -3,6 +3,37 @@ import { useLocation, Link } from 'react-router-dom';
 import SeatMap from './SeatMap';
 import './viewFlight.css';
 
+const TabularView = ({ passengers }) => {
+    if (!passengers || passengers.length === 0) {
+        return <p>No passengers available for this flight.</p>;
+    }
+
+    return (
+        <table className="flight-table">
+            <thead>
+                <tr>
+                    <th>Passenger Name</th>
+                    <th>Seat Number</th>
+                    <th>Age</th>
+                    <th>Gender</th>
+                    <th>Special Assistance</th>
+                </tr>
+            </thead>
+            <tbody>
+                {passengers.map((passenger, index) => (
+                    <tr key={index}>
+                        <td>{passenger.name}</td>
+                        <td>{passenger.seat_number}</td>
+                        <td>{passenger.age}</td>
+                        <td>{passenger.gender}</td>
+                        <td>{passenger.special_assistance ? 'Yes' : 'No'}</td>
+                    </tr>
+                ))}
+            </tbody>
+        </table>
+    );
+};
+
 const ViewFlight = () => {
     const location = useLocation();
     const { flightDetails } = location.state || {}; // Add a fallback for location.state
@@ -25,15 +56,14 @@ const ViewFlight = () => {
                     <Link to="/dashboard">
                         <img src="./logowhite.png" alt="Logo" className="logo" />
                     </Link>
-                    <h1 className='header'>Flight Details</h1>
                 </div>
+                <h1 className='header'>Flight Details</h1>
                 <div className="right-section">
                     <Link to="/dashboard" className='nav-item'>Home</Link>
                 </div>
             </nav>
             {flight && flight.flight_num && (
                 <div className='flight-details'>
-                    <h1>Flight Details</h1>
                     <p><strong>Flight Number:</strong> {flight.flight_num}</p>
                     <p><strong>Date:</strong> {flight.date}</p>
                     <p><strong>Time: </strong>{flight.time}</p>
@@ -60,8 +90,7 @@ const ViewFlight = () => {
 
                 {flight && currentView === 'tabular' && (
                     <>
-                        {/* Tabular View Component */}
-                        <div>Tabular View</div>
+                        <TabularView passengers={flight.passengers} />
                     </>
                 )}
 
