@@ -23,7 +23,8 @@ module.exports = function createFlightInfoRouter(supabaseKey) {
                 nationality,
                 seattype,
                 seatnumber,
-                parentid
+                parentid,
+                affiliated_passenger
             } = req.query;
 
             let query = supabase.from('passengers').select('*');
@@ -37,7 +38,8 @@ module.exports = function createFlightInfoRouter(supabaseKey) {
                 nationality,
                 seattype,
                 seatnumber,
-                parentid
+                parentid,
+                affiliated_passenger
             };
             Object.keys(queryParams).forEach(key => {
                 if (queryParams[key]) {
@@ -80,14 +82,17 @@ module.exports = function createFlightInfoRouter(supabaseKey) {
         else{
           limitNumber=5;
         }
+<<<<<<< Updated upstream
         const addedPassengers = [];
           for (let i = 0; i < limitNumber; i++) {
             //slows down too much need to do it only once       
             const { data: existingFlights, error: flightInfoError } = await supabase
+=======
+        const { data: existingFlights, error: flightInfoError } = await supabase
+>>>>>>> Stashed changes
             .from('flight_info')
             .select('flight_num,shared_flight_number,vehicle_type')
             .eq('flight_num', flightnum);
-
         if (flightInfoError) {
             throw flightInfoError;
         }
@@ -96,6 +101,8 @@ module.exports = function createFlightInfoRouter(supabaseKey) {
             return res.status(400).json({ error: 'Flight number not found' });
         }
         const vehicleType = existingFlights[0].vehicle_type;
+        const addedPassengers = [];
+          for (let i = 0; i < limitNumber; i++) {
         // Generate random passenger information if not provided
         const passengerInfo = {
             id: id,
@@ -106,11 +113,29 @@ module.exports = function createFlightInfoRouter(supabaseKey) {
             nationality: nationality ? nationality : faker.address.country(),
             seattype: seattype ? seattype : null, // Will be calculated later if necessary
             seatnumber: seatnumber ? seatnumber : null, // Will be assigned later if necessary
-            parentid: parentid ? parentid : null
+            parentid: parentid ? parentid : null,
+            affiliated_passenger: affiliated_passenger ? affiliated_passenger : null
         };
+        if(parentid){
+            if(age && (age>2)){
+                return res.status(400).json({ error: 'A parent cant be assigned to passangers with the age above 2' });
+            }
+            if(!age){
+                return res.status(400).json({ error: 'A parent cant be assigned to passangers with unknown age' });
+            }
+            if(seatnumber){
+                return res.status(400).json({ error: 'Passengers with age below 2 cant have saperete seats' });
+            }
+        }
 
         // Validate seat number if provided
         if (seatnumber) {
+
+            // Chechk if there is a affiliated_passenger even if the passanger has a seat
+            if(affiliated_passenger){
+                return res.status(400).json({ error: 'Passangers cant choose to sit next to affiliated passengers if they have a seat number' });
+            }
+
             // Check if the seat number is unique for the given flight
             const { data: existingPassengers, error: passengerError } = await supabase
                 .from('passengers')
@@ -126,7 +151,7 @@ module.exports = function createFlightInfoRouter(supabaseKey) {
                 return res.status(400).json({ error: 'Seat number already assigned to another passenger' });
             }
         }
-
+        
 
         // Determine seating plan based on vehicle type
         const { data: aircraftData, error: aircraftDataError } = await supabase
@@ -220,7 +245,7 @@ module.exports = function createFlightInfoRouter(supabaseKey) {
                 console.error('Error updating passenger information:', error.message);
                 res.status(500).json({ error: 'Internal server error' });
             }
-        });        
+        });
 
     return router;
 }

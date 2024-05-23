@@ -74,7 +74,15 @@ module.exports = function createMainSystemRouter(supabaseKey) {
       });
       const passengers = passengersResponse.data;
       const passengerids = passengersResponse.data.map(passenger => passenger.id);
-
+      
+      for(let i= 0;i<passengers.length;i++){
+        let passenger = passengers[i];
+        if(!passenger.seatnumber){
+          if(passenger.affiliated_passenger){
+            
+          }
+        }
+      }
 
        // Fetch the last roster_id
        const { data: lastCrewMember, error: lastCrewMemberError } = await supabase
