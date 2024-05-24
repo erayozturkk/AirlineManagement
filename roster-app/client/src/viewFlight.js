@@ -23,7 +23,7 @@ const ViewFlight = () => {
             try {
                 const response = await axios.get('http://localhost:5001/main-system/get-extended-view', {
                     params: {
-                        flight_num: flightDetails.flight_num,
+                        flight_details: flightDetails,
                     }
                 });
                 setFlightRoster(response.data); // Set flight_roster state

@@ -21,9 +21,6 @@ module.exports = function createFlightInfoRouter(supabaseKey) {
                 age,
                 gender,
                 nationality,
-                seattype,
-                seatnumber,
-                parentid
             } = req.query;
 
             let query = supabase.from('passengers').select('*');
@@ -35,9 +32,6 @@ module.exports = function createFlightInfoRouter(supabaseKey) {
                 age,
                 gender,
                 nationality,
-                seattype,
-                seatnumber,
-                parentid
             };
             Object.keys(queryParams).forEach(key => {
                 if (queryParams[key]) {
