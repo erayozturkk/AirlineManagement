@@ -197,15 +197,11 @@ module.exports = function createFlightInfoRouter(supabaseKey) {
 
         if(seatnumber){
             if (!seattype) {
-                console.log(seatnumber.slice(0,-1));    
-                console.log(seatingPlan["business"].rows); 
-                if(seatnumber.slice(0,-1)<=seatingPlan["business"].rows){
-                    
+
+                if(seatnumber.slice(0,-1)<=seatingPlan["business"].rows){                 
                     passengerInfo.seattype="business";
-                    console.log(passengerInfo.seattype);
                 }
                 else{
-                    console.log('girdim');
                     passengerInfo.seattype="economy";
                 }
             }
@@ -227,7 +223,6 @@ module.exports = function createFlightInfoRouter(supabaseKey) {
                 }
             }
         }
-        console.log(seatnumberint);
 
         
         if( seatnumber && (seatnumberint> max_seats)){

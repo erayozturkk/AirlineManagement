@@ -66,7 +66,12 @@ module.exports = function createMainSystemRouter(supabaseKey) {
       }
       const max_seats = aircrafts[0].numberofseats;
       const seatingPlan = aircrafts[0].seatingplan;
+      const LayoutB=seatingPlan["business"].layout;
+      const LayoutE=seatingPlan["economy"].layout;
+      const seatsPerRowB = LayoutB.split('-').reduce((total, num) => total + parseInt(num), 0);
+      const seatsPerRowE = LayoutE.split('-').reduce((total, num) => total + parseInt(num), 0);
       const businessmax= seatingPlan["business"].rows*(seatingPlan['business'].layout.split('-').reduce((total, num) => total + parseInt(num), 0));
+
       // Fetch flight crew information
       const flightCrewids = (await selectCrew(vtype,range,R_date,R_time,R_duration)).map(crew => crew.id);
       // Fetch cabin crew information
@@ -97,30 +102,30 @@ module.exports = function createMainSystemRouter(supabaseKey) {
               if(passengerids.includes(affiliatedpassengerid)){
                 let affiliatedPassenger = passengers.find(p => p.id === affiliatedpassengerid);
                 if(affiliatedPassenger.seatnumber && (affiliatedPassenger.seattype===passenger.seattype)){
-                  const layout = seatingPlan[affiliatedPassenger.seattype].layout;
+                  const layout = seatingPlan[affiliatedPassenger.seattype].layout;///buraya kadar np
                   const seatsPerRow = layout.split('-').reduce((total, num) => total + parseInt(num), 0);
-                  if(affiliatedPassenger.seatnumber%seatsPerRow===1){
-                    if(!occupiedseats.includes(affiliatedPassenger.seatnumber + 1)){
-                      passenger.seatnumber=affiliatedPassenger.seatnumber + 1;
+                  if(affiliatedPassenger.seatnumber.charCodeAt(affiliatedPassenger.seatnumber.length-1)===65){
+                    if(!occupiedseats.includes(affiliatedPassenger.seatnumber.slice(0,-1) + String.fromCharCode(affiliatedPassenger.seatnumber.charCodeAt(affiliatedPassenger.seatnumber.length-1)+1))){
+                      passenger.seatnumber=affiliatedPassenger.seatnumber.slice(0,-1) + String.fromCharCode(affiliatedPassenger.seatnumber.charCodeAt(affiliatedPassenger.seatnumber.length-1)+1);
                       changed=true;
                       break;
                     }
                   }
-                  else if(affiliatedPassenger.seatnumber%seatsPerRow===0){;
-                    if(!occupiedseats.includes(affiliatedPassenger.seatnumber - 1)){
-                      passenger.seatnumber=affiliatedPassenger.seatnumber - 1;
+                  else if(affiliatedPassenger.seatnumber.charCodeAt(affiliatedPassenger.seatnumber.length-1)===64+seatsPerRow){
+                    if(!occupiedseats.includes(affiliatedPassenger.seatnumber.slice(0,-1) + String.fromCharCode(affiliatedPassenger.seatnumber.charCodeAt(affiliatedPassenger.seatnumber.length-1)-1))){
+                      passenger.seatnumber=affiliatedPassenger.seatnumber.slice(0,-1) + String.fromCharCode(affiliatedPassenger.seatnumber.charCodeAt(affiliatedPassenger.seatnumber.length-1)-1);
                       changed=true;
                       break;
                     }
                   }
                   else{
-                    if(!occupiedseats.includes(affiliatedPassenger.seatnumber + 1)){
-                      passenger.seatnumber=affiliatedPassenger.seatnumber + 1;
+                    if(!occupiedseats.includes(affiliatedPassenger.seatnumber.slice(0,-1) + String.fromCharCode(affiliatedPassenger.seatnumber.charCodeAt(affiliatedPassenger.seatnumber.length-1)+1))){
+                      passenger.seatnumber=affiliatedPassenger.seatnumber.slice(0,-1) + String.fromCharCode(affiliatedPassenger.seatnumber.charCodeAt(affiliatedPassenger.seatnumber.length-1)+1);
                       changed=true;
                       break;
                     }
-                    else if(!occupiedseats.includes(affiliatedPassenger.seatnumber - 1)){
-                      passenger.seatnumber=affiliatedPassenger.seatnumber - 1;
+                    else if(!occupiedseats.includes(affiliatedPassenger.seatnumber.slice(0,-1) + String.fromCharCode(affiliatedPassenger.seatnumber.charCodeAt(affiliatedPassenger.seatnumber.length-1)-1))){
+                      passenger.seatnumber=affiliatedPassenger.seatnumber.slice(0,-1) + String.fromCharCode(affiliatedPassenger.seatnumber.charCodeAt(affiliatedPassenger.seatnumber.length-1)-1);
                       changed=true;
                       break;
                     }
@@ -129,36 +134,41 @@ module.exports = function createMainSystemRouter(supabaseKey) {
               }
             }
           }
-        }
+        
 
 
 
         if(!changed){
           
-          if(passenger.seattype==['business']){
-            for(let i=1;i<=businessmax;i++){
-              if(!occupiedseats.includes(i)){
-                passenger.seatnumber=i;
+          if(passenger.seattype=='business'){
+            for(let i=0;i<=businessmax;i++){
+              let char = String.fromCharCode(i%seatsPerRowB+65);
+              let row = ((i-(i%seatsPerRowB))/seatsPerRowB)+1;
+              if(!occupiedseats.includes(row+char)){
+                passenger.seatnumber=row+char;
                 break
               }
             }
           }
           if(passenger.seattype==['economy']){
-            for(let i=businessmax+1;i<=max_seats;i++){
-              if(!occupiedseats.includes(i)){
-                passenger.seatnumber=i;
+            for(let i=businessmax;i<=max_seats;i++){
+              let char = String.fromCharCode((i-businessmax)%seatsPerRowE+65);
+              let row = (((i-businessmax)-(i-businessmax)%seatsPerRowE)/seatsPerRowE)+seatingPlan["business"].rows+1;
+              if(!occupiedseats.includes(row+char)){
+                passenger.seatnumber=row+char;
                 break
               }
             }
           }
         }
+      }
         occupiedseats.push(passenger.seatnumber);
         const passengerarray = [] ;
         passengerarray.push(passenger);
         const UpdatedPassengerResponse = await axios.put('http://localhost:5001/passenger-info/update-passengers', 
         { passengerarray }, {
         headers: { 'Content-Type': 'application/json' }
-    });
+        });
       }
        // Fetch the last roster_id
        const { data: lastCrewMember, error: lastCrewMemberError } = await supabase
@@ -576,7 +586,9 @@ async function selectCabinCrew(vehicleRestriction, flightDate, flightTime, fligh
       selectedCrew.push(chef);
 
       // Add a random dish from the chef to the flight menu
-      const dish = chef.recipes[Math.floor(Math.random() * chef.recipes.length)];
+      let dish = chef.recipes[Math.floor(Math.random() * chef.recipes.length)];
+      dish = dish[0].toUpperCase() + dish.slice(1);
+
       if(!flightmenu.includes(dish)){
         flightmenu.push(dish);
       }
@@ -588,5 +600,7 @@ async function selectCabinCrew(vehicleRestriction, flightDate, flightTime, fligh
 
 
 
-  return router;
+
+
+return router;
 };
