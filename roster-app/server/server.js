@@ -34,14 +34,14 @@ app.get('/', (req, res) => {
   res.send('Welcome to the homepage');
 });
 
-const verifyToken = require('./authMiddleware');
+const verifyToken = require('./middleware/authMiddleware');
 
 // Apply verifyToken middleware to protected routes
-app.use('/cabin-crew', verifyToken, cabinCrewRouter);
-app.use('/flight-info', verifyToken, flightInfoRouter);
-app.use('/flight-crew', verifyToken, flightCrewRouter);
-app.use('/passenger-info', verifyToken, passengerInfoRouter);
-app.use('/main-system', verifyToken, mainSystemRouter);
+app.use('/cabin-crew', verifyToken, CabinCrewRouter);
+app.use('/flight-info', verifyToken, FlightInfoRouter);
+app.use('/flight-crew', verifyToken, FlightCrewRouter);
+app.use('/passenger-info', verifyToken, PassengerCrewRouter);
+app.use('/main-system', verifyToken, MainSystemRouter);
 app.use('/aircraft', verifyToken, AircraftAPI);
 
 
