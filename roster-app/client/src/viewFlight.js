@@ -14,7 +14,9 @@ const ViewFlight = () => {
     const [currentView, setCurrentView] = useState('plane'); // Default view is 'plane'
 
     console.log('Flight details:', flightDetails);
-
+//
+//
+//
     useEffect(() => {
         if (flightDetails) {
             setFlight(flightDetails);
