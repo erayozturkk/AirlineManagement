@@ -65,6 +65,12 @@ const DashboardAdmin = () => {
         });
     };
 
+    const logout = () => {
+        localStorage.removeItem('token');
+        navigate('/login');
+    };
+    
+
     return (
         <div className='dashboard-page'>
             <nav className='dashboard-navbar'>
@@ -72,7 +78,8 @@ const DashboardAdmin = () => {
                     <img src="./logowhite.png" alt="Logo" className="logo" />
                 </Link>
                 <h1 className='header'>Admin Dashboard</h1>
-                <Link to="/dashboard" className='nav-item'>Home</Link>
+                <a href="/login" onClick={logout} className='nav-item-logout'>Sign Out</a>
+                <Link to="/settings" className='nav-item'>Settings</Link>
             </nav>
             <div className='dashboard-header'>
                 
@@ -205,3 +212,4 @@ const DashboardAdmin = () => {
 };
 
 export default DashboardAdmin;
+

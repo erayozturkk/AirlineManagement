@@ -7,6 +7,8 @@ import ForgotPasswordPage from './ForgotPassword';
 import DashboardAdmin from './DashboardAdmin';
 import ViewFlight from './viewFlight';
 import SeatMap from './SeatMap';
+import PrivateRoute from './PrivateRoute';
+import SettingsPage from './SettingsPage';
 
 function App() {
     return (
@@ -15,10 +17,46 @@ function App() {
                 <Route path="/" element={<HomePage />} />
                 <Route path="/login" element={<LogInPage />} />
                 <Route path="/signup" element={<SignUpPage />} />
-                <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-                <Route path="/dashboard" element={<DashboardAdmin />} />
-                <Route path="/viewFlight" element={<ViewFlight />} />
-                <Route path="/seatMap" element={<SeatMap />} />
+                <Route
+                    path="/forgot-password"
+                    element={
+                        <PrivateRoute>
+                            <ForgotPasswordPage />
+                        </PrivateRoute>
+                    }
+                />
+                <Route
+                    path="/dashboard"
+                    element={
+                        <PrivateRoute>
+                            <DashboardAdmin />
+                        </PrivateRoute>
+                    }
+                />
+                <Route
+                    path="/viewFlight"
+                    element={
+                        <PrivateRoute>
+                            <ViewFlight />
+                        </PrivateRoute>
+                    }
+                />
+                <Route
+                    path="/seatMap"
+                    element={
+                        <PrivateRoute>
+                            <SeatMap />
+                        </PrivateRoute>
+                    }
+                />
+                <Route
+                    path="/settings"
+                    element={
+                        <PrivateRoute>
+                            <SettingsPage/>
+                        </PrivateRoute>
+                    }
+                />
             </Routes>
         </BrowserRouter>
     );

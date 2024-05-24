@@ -1,18 +1,16 @@
-const { createClient } = require('@supabase/supabase-js');
 const express = require('express');
+const { createClient } = require('@supabase/supabase-js');
 
-// Create a new router instance
-const router = express.Router();
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_KEY;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-router.get('/aircraft_info/:vehicle_type', async (req, res) => {
+const router = express.Router();
+
+router.get('/aircraft_info', async (req, res) => {
     try {
-        const { vehicle_type } = req.params;
-        const decoded_vehicle_type = decodeURIComponent(vehicle_type);
+        const { vehicle_type } = req.query; // Use req.query for query parameters
         let query = supabase.from('aircrafts').select('*');
-        console.log('Vehicle Type:', decoded_vehicle_type);
         if (vehicle_type) {
             query = query.eq('vehicletype', vehicle_type);
         }

@@ -1,52 +1,38 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, Link } from 'react-router-dom';
 import SeatMap from './SeatMap';
+import ExtendedView from './ExtendedView';
+import TabularView from './TabularView';
+import axios from 'axios';
 import './viewFlight.css';
-
-const TabularView = ({ passengers }) => {
-    if (!passengers || passengers.length === 0) {
-        return <p>No passengers available for this flight.</p>;
-    }
-
-    return (
-        <table className="flight-table">
-            <thead>
-                <tr>
-                    <th>Passenger Name</th>
-                    <th>Seat Number</th>
-                    <th>Age</th>
-                    <th>Gender</th>
-                    <th>Special Assistance</th>
-                </tr>
-            </thead>
-            <tbody>
-                {passengers.map((passenger, index) => (
-                    <tr key={index}>
-                        <td>{passenger.name}</td>
-                        <td>{passenger.seat_number}</td>
-                        <td>{passenger.age}</td>
-                        <td>{passenger.gender}</td>
-                        <td>{passenger.special_assistance ? 'Yes' : 'No'}</td>
-                    </tr>
-                ))}
-            </tbody>
-        </table>
-    );
-};
 
 const ViewFlight = () => {
     const location = useLocation();
     const { flightDetails } = location.state || {}; // Add a fallback for location.state
     const [flight, setFlight] = useState(flightDetails || {}); // Initialize with flightDetails if available
+    const [flightRoster, setFlightRoster] = useState(null); // State for flight_roster
     const [currentView, setCurrentView] = useState('plane'); // Default view is 'plane'
 
     console.log('Flight details:', flightDetails);
 
     useEffect(() => {
         if (flightDetails) {
-            console.log('Setting flight:', flightDetails);
             setFlight(flightDetails);
         }
+        const fetchSeatingPlan = async () => {
+            try {
+                const response = await axios.get('http://localhost:5001/main-system/get-extended-view', {
+                    params: {
+                        flight_details: flightDetails,
+                    }
+                });
+                setFlightRoster(response.data); // Set flight_roster state
+
+            } catch (error) {
+                console.error('Error fetching seating plan:', error);
+            }
+        };
+        fetchSeatingPlan();
     }, [flightDetails]);
 
     return (
@@ -59,7 +45,8 @@ const ViewFlight = () => {
                 </div>
                 <h1 className='header'>Flight Details</h1>
                 <div className="right-section">
-                    <Link to="/dashboard" className='nav-item'>Home</Link>
+                    <Link to="/login" className='nav-item-logout'>Sign Out</Link>
+                    <Link to="/settings" className='nav-item'>Settings</Link>
                 </div>
             </nav>
             {flight && flight.flight_num && (
@@ -73,6 +60,7 @@ const ViewFlight = () => {
                     <p><strong>Destination Airport Code:</strong> {flight.destination_airport_code}</p>
                     <p><strong>Distance:</strong> {flight.distance} KM</p>
                     <p><strong>Vehicle:</strong> {flight.vehicle_type}</p>
+
                 </div>
             )}
             <div className='view-flight-container'>
@@ -82,22 +70,25 @@ const ViewFlight = () => {
                     <button onClick={() => setCurrentView('extended')}>Extended View</button>
                 </div>
 
-                {flight && currentView === 'plane' && (
+                {flight && currentView === 'plane' && flightRoster && (
+                    console.log('Flight Roster:', flightRoster),
                     <>
-                        <SeatMap flight={flight} />
+                        <p><strong>Menu:</strong> {flightRoster.menu.join(', ')}</p>
+                        <SeatMap flightRoster={flightRoster} />
                     </>
                 )}
 
                 {flight && currentView === 'tabular' && (
                     <>
-                        <TabularView passengers={flight.passengers} />
+                        {/* Tabular View Component */}
+                        <TabularView flightRoster={flightRoster} />
                     </>
                 )}
 
                 {flight && currentView === 'extended' && (
                     <>
-                        {/* Extended View Component */}
-                        <div>Extended View</div>
+
+                        <ExtendedView flightRoster={flightRoster} />
                     </>
                 )}
             </div>

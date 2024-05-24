@@ -1,13 +1,10 @@
-/* General Body Styling */
 body.dashboard-page {
     font-family: Arial, sans-serif;
-    /* Set the font for the entire page */
     margin: 0;
     padding: 0;
     background: #f4f4f4;
 }
 
-/* Navbar Styling */
 .dashboard-navbar {
     display: flex;
     background-color: #333;
@@ -26,26 +23,15 @@ body.dashboard-page {
     margin-top: -5%;
 }
 
-.nav-item {
-    color: #333;
-    text-decoration: none;
-    padding: 10px 15px;
-    margin: 0;
-    background-color: white;
-    border-radius: 5px;
-}
-
- .header {
+.dashboard-navbar .header {
     flex-grow: 1;
-    text-align: center;
-    
+    text-align: match-parent;
 }
 
 .nav-item:hover {
     background-color: #555;
 }
 
-/* Header Styling */
 .dashboard-header {
     text-align: center;
     padding: 20px;
@@ -53,7 +39,6 @@ body.dashboard-page {
     color: #333
 }
 
-/* Menu Styling */
 .dashboard-menu {
     display: flex;
     flex-direction: column;
@@ -123,6 +108,33 @@ body.dashboard-page {
     display: flex;
     justify-content: space-around;
     margin-bottom: 20px;
+}
+
+.nav-item {
+    color: #333;
+    text-decoration: none;
+    padding: 10px 15px;
+    margin: 0;
+    background-color: white;
+    border-radius: 5px;
+}
+
+.dashboard-navbar .nav-item,
+.dashboard-navbar .nav-item-logout {
+    color: #333;
+    text-decoration: none;
+    padding: 10px 15px;
+    margin: 0;
+    margin-right: 0.5%;
+    background-color: white;
+    border-radius: 5px;
+    justify-content: space-between;
+}
+
+.dashboard-navbar .nav-item:hover,
+.dashboard-navbar .nav-item-logout:hover {
+    color: white;
+    background-color: #555;
 }
 
 .nav-item {

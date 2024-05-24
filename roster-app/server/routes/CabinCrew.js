@@ -1,9 +1,35 @@
 const faker = require('faker');
 
+const { createClient } = require('@supabase/supabase-js');
+
+require('dotenv').config();
+
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_KEY;
+const supabase = createClient(supabaseUrl, supabaseKey);
+
+let aircrafts = [];
+
+// Function to fetch aircrafts data
+async function fetchAircrafts() {
+    const { data: aircraftData, error: aircraftError } = await supabase
+        .from('aircrafts')
+        .select('vehicletype');
+
+    if (aircraftError) {
+        throw aircraftError;
+    }
+
+    aircrafts = aircraftData.map(aircraft => aircraft.vehicletype);
+}
+
+// Call fetchAircrafts to initialize aircrafts array
+fetchAircrafts().catch(console.error);
+
 // Array of recipes
 const recipes = [
     "spaghetti", "steak", "soup", "pizza", "hamburger", "burrito",
-    "lasagna", "sushi", "fried rice", "pancakes", "omelette", 
+    "lasagna", "sushi", "fried rice", "pancakes", "omelette",
     "chicken curry", "tacos", "macaroni and cheese", "pad thai",
     "grilled cheese sandwich", "chocolate cake", "apple pie",
     "chicken parmesan", "ramen", "mashed potatoes", "salmon",
@@ -17,15 +43,12 @@ const commonLanguages = [
     "Turkish", "Dutch", "Polish", "Vietnamese", "Thai"
     // Add more languages as needed
 ];
-const aircrafts = [
-    "Airbus A320", "Airbus A330", "Airbus A380", "Boeing 777", "Boeing 787"
-];
 
 
 
 class CabinCrew {
-    constructor(attendantid, name, age, gender, nationality, languages, attendanttype, vehiclerestriction, recipes) {
-        this.attendantid = attendantid;
+    constructor(id, name, age, gender, nationality, languages, attendanttype, vehiclerestriction, recipes) {
+        this.id = id;
         this.name = name;
         this.age = age;
         this.gender = gender;
@@ -38,7 +61,7 @@ class CabinCrew {
 
     // Getters
     getAttendantid() {
-        return this.attendantid;
+        return this.id;
     }
 
     getName() {
@@ -74,8 +97,8 @@ class CabinCrew {
     }
 
     // Setters
-    setAttendantid(attendantid) {
-        this.attendantid = attendantid;
+    setid(id) {
+        this.id = id;
     }
 
     setName(name) {
@@ -114,12 +137,12 @@ class CabinCrew {
     }
 
     static generateRandom() {
-        const attendantid = faker.datatype.number();
+        const id = faker.datatype.number();
         const name = faker.name.findName();
         const age = faker.datatype.number({ min: 18, max: 60 });
         const gender = faker.random.arrayElement(["Male", "Female"]);
         const nationality = faker.address.country();
-        const languages = [ 'English', ...faker.random.arrayElements(commonLanguages, faker.datatype.number({ min: 1, max: 1 })) ];
+        const languages = ['English', ...faker.random.arrayElements(commonLanguages, faker.datatype.number({ min: 1, max: 1 }))];
         const attendanttype = faker.random.arrayElement(["chief", "regular", "chef"]);
         const vehiclerestriction = faker.random.arrayElements(aircrafts, faker.datatype.number({ min: 2, max: 2 }));
         let assignedRecipes = [];
@@ -128,7 +151,7 @@ class CabinCrew {
             assignedRecipes = faker.random.arrayElements(recipes, faker.datatype.number({ min: 2, max: 4 }));
         }
 
-        return new CabinCrew(attendantid, name, age, gender, nationality, languages, attendanttype, vehiclerestriction, assignedRecipes);
+        return new CabinCrew(id, name, age, gender, nationality, languages, attendanttype, vehiclerestriction, assignedRecipes);
     }
 
     toString() {
