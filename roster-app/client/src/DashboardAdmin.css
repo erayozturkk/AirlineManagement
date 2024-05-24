@@ -1,71 +1,226 @@
-.dashboard {
-    background-color: #e8e8e8;
-    padding-bottom: 20px;
-    min-height: 100vh;
-    width: 212.5%;
+body.dashboard-page {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background: #f4f4f4;
 }
 
-.navbar {
-    background-color: #0468BF;
+.dashboard-navbar {
     display: flex;
-    justify-content: center;
-    padding: 10px 0;
-}
-
-.nav-item {
+    background-color: #333;
     color: white;
     padding: 10px 20px;
-    text-decoration: none;
-    margin: 0 10px;
-    border-radius: 8px;
-    transition: background-color 0.3s ease;
+    align-items: center;
+    border-radius: 10px;
+}
+
+.dashboard-navbar .logo {
+    margin-right: 20px;
+    max-width: 50px;
+    width: auto;
+    height: auto;
+    margin-bottom: 8%;
+    margin-top: -5%;
+}
+
+.dashboard-navbar .header {
+    flex-grow: 1;
+    text-align: match-parent;
 }
 
 .nav-item:hover {
-    background-color: #0056b3;
+    background-color: #555;
 }
 
-.header {
+.dashboard-header {
     text-align: center;
-    padding: 20px 0;
+    padding: 20px;
+    background: #eee;
+    color: #333
 }
 
-.menu {
+.dashboard-menu {
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+    background: white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    align-items: center;
+}
+
+.dashboard-menu input {
+    padding: 10px;
+    margin: 10px 0px;
+    border-radius: 5px;
+    border: solid 1px #002277;
+
+}
+
+.input_container {
+    display: flex;
+    justify-content: center;
+    flex-direction: row;
+}
+
+
+.dashboard-menu button {
+    padding: 10px 20px;
+    background-color: #333;
+    color: white;
+    border: none;
+    cursor: pointer;
+    border-radius: 5px;
+    display: inline-block;
+    margin-top: 20px;
+}
+
+.dashboard-menu button:hover {
+    background-color: #555;
+}
+
+.dashboard-menu label {
+    display: block;
+    margin: 5px 0px;
+    padding: 5px 0px;
+}
+
+.dashboard-menu-item label {
+    text-align: center;
+    border-radius: 5px;
+    border: solid 1px #333;
+    background-color: #333;
+    color: white;
+    border-radius: 10px;
+}
+
+#Date_Container {
+    display: flex;
+    justify-content: space-between;
+    flex-direction: row;
+}
+
+.dashboard-page {
+    font-family: Arial, sans-serif;
+    padding: 20px;
+}
+
+.dashboard-navbar {
     display: flex;
     justify-content: space-around;
-    margin: 20px 0;
+    margin-bottom: 20px;
 }
 
-.menu-item {
-    background-color: #0468BF;
-    color: white;
-    padding: 20px;
-    border-radius: 8px;
-    width: 30%;
-    height: 200px;
-    text-align: center;
-    cursor: pointer;
+.nav-item {
+    color: #333;
+    text-decoration: none;
+    padding: 10px 15px;
+    margin: 0;
+    background-color: white;
+    border-radius: 5px;
 }
 
-.menu-item:hover {
-    background-color: #0056b3;
-}
-
-.content {
-    display: flex;
+.dashboard-navbar .nav-item,
+.dashboard-navbar .nav-item-logout {
+    color: #333;
+    text-decoration: none;
+    padding: 10px 15px;
+    margin: 0;
+    margin-right: 0.5%;
+    background-color: white;
+    border-radius: 5px;
     justify-content: space-between;
 }
 
-.upcoming-flights, .notifications {
-    background-color: white;
-    padding: 30px;
-    border-radius: 8px;
-    width: 45%;
-    margin-left: 10px;
-    margin-right: 10px;
-    
+.dashboard-navbar .nav-item:hover,
+.dashboard-navbar .nav-item-logout:hover {
+    color: white;
+    background-color: #555;
 }
 
-h2 {
-    color: #0455BF;
+.nav-item {
+    text-decoration: none;
+    color: #333;
+}
+
+.dashboard-header {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.dashboard-menu {
+    margin-bottom: 20px;
+}
+
+.input_container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.filter {
+    margin-bottom: 10px;
+    display: flex;
+    flex-direction: column;
+}
+
+#Date_Container {
+    display: flex;
+    gap: 10px;
+}
+
+.results-section {
+    margin-top: 20px;
+}
+
+.result-item {
+    background-color: #f8f9fa;
+    padding: 10px;
+    border: 1px solid #ddd;
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.result-buttons button {
+    margin-left: 10px;
+    background-color: #333;
+    color: white;
+    border: none;
+    cursor: pointer;
+    border-radius: 5px;
+    padding: 10px;
+}
+
+.result-buttons button:hover {
+    background-color: #555;
+}
+
+.search-toggle {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+    color: #333;
+}
+
+.search-toggle button {
+    padding: 10px 20px;
+    margin: 0 5px;
+    cursor: pointer;
+}
+
+.search-toggle .active {
+    background-color: #555;
+    color: white;
+}
+
+.search-toggle button  {
+    color: #333;
+}
+
+.dashboard-menu form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    /* Center elements inside the form */
 }

@@ -1,0 +1,27 @@
+.valid {
+    color: green;
+}
+
+.invalid {
+    color: red;
+}
+
+.container {
+    margin-top: 20px;
+}
+
+.card {
+    max-width: 600px;
+    margin: 0 auto;
+    border-radius: 10px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.card-title {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    font-weight: bold;
+}

@@ -12,11 +12,11 @@ const ForgotPasswordPage = () => {
     };
 
     return (
-        <body>
+        <body className='forgot-password'>
             <div className="login-logo">
                 <img src="./logo.png" alt="logo" className='login-logo' />
             </div>
-            <div className="login-container">
+            <div className="password-container">
                 <h2>FLIGHT ROSTER APPLICATION</h2>
                 <form onSubmit={handleSubmit}>
                     <div className="input-group">

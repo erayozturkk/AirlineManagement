@@ -6,15 +6,20 @@ const bodyParser = require('body-parser');
 const FlightInfoRouter = require('./routes/Flight_Info');
 const CabinCrewRouter = require('./routes/Cabin_Crew_API');
 const FlightCrewRouter = require('./routes/Flight_Crew_API');
-//const PassangerCrewRouter = require('./routes/Passanger_Info_API');
+const PassengerCrewRouter = require('./routes/Passenger_Info_API');
+const MainSystemRouter = require('./routes/Main_System');
+const AircraftAPI = require('./routes/aircraft_api');
+const authRouter = require('./routes/authRoutes');
+const cors = require('cors');
 
 // Initialize Express app
 const app = express();
-
 // Initialize Supabase client
-const supabaseUrl = "https://hsixajfgpamanbqvxyyw.supabase.co";
-const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhzaXhhamZncGFtYW5icXZ4eXl3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTEwNDI5NTYsImV4cCI6MjAyNjYxODk1Nn0.22DwSKkVdZYNPGqruamm-IQ5iQRnlnU3tF73GbwXP7E";
-const supabase = createClient(supabaseUrl, supabaseKey);
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_KEY;
+if (!supabaseUrl || !supabaseKey) {
+  throw new Error('supabaseUrl and supabaseKey are required.');
+}
 
 // parse application/x-www-form-urlencoded
 app.use(bodyParser.urlencoded({ extended: false }));
@@ -22,44 +27,32 @@ app.use(bodyParser.urlencoded({ extended: false }));
 // parse application/json
 app.use(bodyParser.json());
 
-
-
-
+app.use(cors());
 
 // Define routes
 app.get('/', (req, res) => {
   res.send('Welcome to the homepage');
 });
 
-app.get('/test-supabase', async (req, res) => {
-  try {
-    // Test connection by fetching aircraft data
-    const { data, error } = await supabase
-      .from('cabincrewmembers')
-      .select('*')
-      .limit(1);
+const verifyToken = require('./authMiddleware');
 
-    if (error) {
-      throw error;
-    }
-    res.json({ message: 'Supabase connected successfully', aircraftData: data });
-  } catch (error) {
-    console.error('Supabase connection error:', error.message);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-});
+// Apply verifyToken middleware to protected routes
+app.use('/cabin-crew', verifyToken, cabinCrewRouter);
+app.use('/flight-info', verifyToken, flightInfoRouter);
+app.use('/flight-crew', verifyToken, flightCrewRouter);
+app.use('/passenger-info', verifyToken, passengerInfoRouter);
+app.use('/main-system', verifyToken, mainSystemRouter);
+app.use('/aircraft', verifyToken, AircraftAPI);
 
 
 const cabinCrewRouter = CabinCrewRouter(supabaseKey);
-app.use('/cabin-crew', cabinCrewRouter);
-//FLight Info Rout...
+
 const flightInfoRouter = FlightInfoRouter(supabaseKey);
-app.use('/flight-info', flightInfoRouter);
+
 const flightCrewRouter = FlightCrewRouter(supabaseKey);
-app.use('/flight-crew', flightCrewRouter);
-//Passanger info rout...
-//const passangerInfoRouter = PassangerCrewRouter(supabaseKey);
-//app.use('/passanger-info',passangerInfoRouter);
+
+const passengerInfoRouter = PassengerCrewRouter(supabaseKey);
+const mainSystemRouter = MainSystemRouter(supabaseKey);
 
 
 // Start the server

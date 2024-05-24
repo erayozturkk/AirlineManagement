@@ -1,26 +1,40 @@
 const faker = require('faker');
-const commonLanguages = [
-    "Spanish", "Mandarin", "Hindi", "Arabic",
-    "Bengali", "French", "Russian", "Portuguese", "Urdu",
-    "German", "Japanese", "Swahili", "Korean", "Italian",
-    "Turkish", "Dutch", "Polish", "Vietnamese", "Thai"
-    // Add more languages as needed
-];
-const aircrafts = [
-    "Airbus A320", "Airbus A330", "Airbus A380", "Boeing 777", "Boeing 787"
-];
+const { commonLanguages } = require('./CabinCrew')
+const { createClient } = require('@supabase/supabase-js');
 
+require('dotenv').config();
+
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_KEY;
+const supabase = createClient(supabaseUrl, supabaseKey);
+
+let aircrafts = [];
+
+// Function to fetch aircrafts data
+async function fetchAircrafts() {
+    const { data: aircraftData, error: aircraftError } = await supabase
+        .from('aircrafts')
+        .select('vehicletype');
+
+    if (aircraftError) {
+        throw aircraftError;
+    }
+
+    aircrafts = aircraftData.map(aircraft => aircraft.vehicletype);
+}
+
+// Call fetchAircrafts to initialize aircrafts array
+fetchAircrafts().catch(console.error);
 
 class Pilot {
-    constructor(pilotId, name, age, gender, nationality, languages, vehicleRestriction, seniorityLevel) {
-        this.pilotId = pilotId;
+    constructor(id, name, age, gender, nationality, languages, vehicleRestriction, seniorityLevel) {
+        this.id = id;
         this.name = name;
         this.age = age;
         this.gender = gender;
         this.nationality = nationality;
         this.languages = languages;
         this.vehicleRestriction = vehicleRestriction;
-        this.allowedRange = this.calculateMaxAllowedRange;
         this.seniorityLevel = seniorityLevel;
         this.allowedRange = this.calculateMaxAllowedRange();
     }
@@ -42,26 +56,26 @@ class Pilot {
 
 
     static generateRandom() {
-        const pilotId = faker.datatype.uuid();
+        const id = faker.datatype.number();
         const name = faker.name.findName();
         const age = faker.datatype.number({ min: 18, max: 60 });
         const gender = faker.random.arrayElement(["Male", "Female"]);
         const nationality = faker.address.country();
-        const languages = [ 'English', ...faker.random.arrayElements(commonLanguages, faker.datatype.number({ min: 1, max: 1 })) ];
+        const languages = ['English', ...faker.random.arrayElements(commonLanguages, faker.datatype.number({ min: 1, max: 1 }))];
         const vehicleRestriction = faker.random.arrayElement(aircrafts); // Adjust as needed
         const seniorityLevel = faker.random.arrayElement(["Senior", "Junior", "Trainee"]);
-    
-        return new Pilot(pilotId, name, age, gender, nationality, languages, vehicleRestriction, seniorityLevel);
+
+        return new Pilot(id, name, age, gender, nationality, languages, vehicleRestriction, seniorityLevel);
     }
 
 
     toString() {
         return JSON.stringify(this);
     }
-    
+
 }
 
-module.exports = { Pilot};
+module.exports = { Pilot };
 
 
 
