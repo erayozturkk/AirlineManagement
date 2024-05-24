@@ -55,6 +55,7 @@ const ViewFlight = () => {
                     <p><strong>Destination Airport Code:</strong> {flight.destination_airport_code}</p>
                     <p><strong>Distance:</strong> {flight.distance} KM</p>
                     <p><strong>Vehicle:</strong> {flight.vehicle_type}</p>
+                    <p><strong>Menu:</strong> {flightRoster.menu}</p>
                 </div>
             )}
             <div className='view-flight-container'>

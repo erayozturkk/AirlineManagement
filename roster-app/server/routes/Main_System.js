@@ -130,7 +130,7 @@ module.exports = function createMainSystemRouter(supabaseKey) {
       // Fetch Flight Roster
       const { data: flightRosterData, error: flightRosterError } = await supabase
         .from('flightrosters')
-        .select('pilotids, cabincrewids')
+        .select('*')
         .eq('flightnum', flight_num);
 
       if (flightRosterError) {
@@ -140,12 +140,13 @@ module.exports = function createMainSystemRouter(supabaseKey) {
       console.log('Flight Roster Data:', flightRosterData)
 
       const flightRoster_ = flightRosterData.length > 0 ? flightRosterData[0] : {};
-      const { pilotids, cabincrewids } = flightRoster_;
-      const pilotIds = pilotids || [];
-      const cabinCrewIds = cabincrewids || [];
+      const pilotIds = flightRoster_['pilotids'] || [];
+      const cabinCrewIds = flightRoster_['cabincrewids'] || [];
+      const menu = flightRoster_['flightmenu'] || [];
 
       console.log('Pilot Ids:', pilotIds);
       console.log('Cabin Crew Ids:', cabinCrewIds);
+      console.log('Menu:', menu);
 
       // Fetch pilot details from the defined endpoint
       const pilotDetailsResponse = await axios.get('http://localhost:5001/flight-crew/get-crew-members-list', {
@@ -173,7 +174,8 @@ module.exports = function createMainSystemRouter(supabaseKey) {
         vtype,
         pilots,
         cabinCrew,
-        passengers
+        passengers,
+        menu
       };
 
       res.json(flightRoster);

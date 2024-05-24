@@ -33,6 +33,7 @@ const SeatMap = ({ flightRoster }) => {
         <div className="seat-map-container">
             {seatingPlan ? (
                 <>
+
                     <SeatingSection classType="Business" seatingPlan={seatingPlan.business} startRow={0} />
                     <SeatingSection classType="Economy" seatingPlan={seatingPlan.economy} startRow={seatingPlan.business.rows} />
                 </>
