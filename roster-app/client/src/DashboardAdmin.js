@@ -73,7 +73,7 @@ const DashboardAdmin = () => {
                 </Link>
                 <h1 className='header'>Admin Dashboard</h1>
                 <Link to="/login" className='nav-item-logout'>Sign Out</Link>
-                <Link to="/dashboard" className='nav-item'>Home</Link>
+                <Link to="/settings" className='nav-item'>Settings</Link>
             </nav>
             <div className='dashboard-header'>
                 
