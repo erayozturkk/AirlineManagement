@@ -108,6 +108,14 @@ module.exports = function createFlightInfoRouter(supabaseKey) {
             throw aircraftDataError;
         }
         const max_seats = aircraftData[0].numberofseats;
+        const { data: passanger, error: passengerError } = await supabase
+        .from('passengers')
+        .select('*')
+        .eq('flightnum', flightnum);
+        const numberofpassengers = passanger.length;
+        if(numberofpassengers+limit>max_seats){
+            return res.status(400).json({error: 'There is not enough seats left for this number of passengers: '},limit);
+        }
         const seatingPlan = aircraftData[0].seatingplan;
         const addedPassengers = [];
         const { data: lastCrewMember, error: lastCrewMemberError } = await supabase
@@ -122,7 +130,9 @@ module.exports = function createFlightInfoRouter(supabaseKey) {
 
         // Calculate the next available id
         let nextId = lastCrewMember.length > 0 ? lastCrewMember[0].id + 1 : 1;
-          for (let i = 0; i < limitNumber; i++) {
+
+        
+        for (let i = 0; i < limitNumber; i++) {
         // Generate random passenger information if not provided
         const passengerInfo = {
             id: id,
@@ -132,10 +142,11 @@ module.exports = function createFlightInfoRouter(supabaseKey) {
             gender: gender ? gender : faker.random.arrayElement(["Male", "Female"]),
             nationality: nationality ? nationality : faker.address.country(),
             seattype: seattype ? seattype : null, // Will be calculated later if necessary
-            seatnumber: seatnumber ? parseInt(seatnumber) : null, // Will be assigned later if necessary
+            seatnumber: seatnumber ? seatnumber : null, // Will be assigned later if necessary
             parentid: parentid ? parentid : null,
             affiliatedpassenger: affiliatedpassenger ? affiliatedpassenger.map(id => parseInt(id)) : null
         };
+
         if(parentid){
             if(age && (age>2)){
                 return res.status(400).json({ error: 'A parent cant be assigned to passangers with the age above 2' });
@@ -174,33 +185,66 @@ module.exports = function createFlightInfoRouter(supabaseKey) {
         
 
         // Determine seating plan based on vehicle type
+        const LayoutB=seatingPlan["business"].layout;
+        const LayoutE=seatingPlan["economy"].layout;
+        const seatsPerRowB = LayoutB.split('-').reduce((total, num) => total + parseInt(num), 0);
+        const seatsPerRowE = LayoutE.split('-').reduce((total, num) => total + parseInt(num), 0);
+        const businessmax=seatsPerRowB*seatingPlan["business"].rows;
+        var seatnumberint = seatnumber;
 
-        if( seatnumber && (seatnumber > max_seats)){
+
+
+
+        if(seatnumber){
+            if (!seattype) {
+                console.log(seatnumber.slice(0,-1));    
+                console.log(seatingPlan["business"].rows); 
+                if(seatnumber.slice(0,-1)<=seatingPlan["business"].rows){
+                    
+                    passengerInfo.seattype="business";
+                    console.log(passengerInfo.seattype);
+                }
+                else{
+                    console.log('girdim');
+                    passengerInfo.seattype="economy";
+                }
+            }
+
+            if(passengerInfo.seattype=='business'){
+                if(65<=parseInt(seatnumber.charCodeAt(seatnumber.length-1))<=64+seatsPerRowB){
+                    var seatnumberint=(seatnumber.charCodeAt(seatnumber.length-1)-64)+(seatsPerRowB*(parseInt(seatnumber.slice(0,-1))-1));
+                }
+                else{
+                    throw new Error('Seat number does not exist for seat type.')
+                }
+            }
+            if(passengerInfo.seattype=='economy'){
+                if(65<=seatnumber.charCodeAt(seatnumber.length-1)<=64+seatsPerRowE){
+                    var seatnumberint=  businessmax+(seatnumber.charCodeAt(seatnumber.length-1)-64) +  seatsPerRowE  *    (  parseInt(seatnumber.slice(0,-1))-seatingPlan["business"].rows-1 );
+                }
+                else{
+                    throw new Error('Seat number does not exist for seat type.')
+                }
+            }
+        }
+        console.log(seatnumberint);
+
+        
+        if( seatnumber && (seatnumberint> max_seats)){
             throw new Error('Seat number exceeds maximum.')
             
         }
 
-        const Layout=seatingPlan["business"].layout;
-        const seatsPerRow = Layout.split('-').reduce((total, num) => total + parseInt(num), 0);
-        const businessmax=seatsPerRow*seatingPlan["business"].rows;
+
         // Calculate seat type if not provided
-        if(!seattype && !parentid){
+        if(!seattype && !parentid && !seatnumber){
             return res.status(400).json({ error: 'Seat type not specified' });
         }
 
-
-        if (!seattype && seatnumber) {     
-            if(seatnumber<=businessmax){
-                passengerInfo.seattype="business";
-            }
-            else{
-                passengerInfo.seattype="economy";
-            }
-        }
-        if(seattype === "business" && seatnumber > businessmax){
+        if((seattype === "business" )&& (seatnumberint > businessmax)){
             throw new Error('Seat type does not match seat number.')
         }
-        if(seattype === "economy" && seatnumber < businessmax){
+        if((seattype === "economy") && (seatnumberint < businessmax)){
             throw new Error('Seat type does not match seat number.')
         }
         // Insert the passenger information into the Supabase table
