@@ -46,7 +46,7 @@ const ViewFlight = () => {
                 <h1 className='header'>Flight Details</h1>
                 <div className="right-section">
                     <Link to="/login" className='nav-item-logout'>Sign Out</Link>
-                    <Link to="/dashboard" className='nav-item'>Home</Link>
+                    <Link to="/settings" className='nav-item'>Settings</Link>
                 </div>
             </nav>
             {flight && flight.flight_num && (
@@ -73,7 +73,7 @@ const ViewFlight = () => {
                 {flight && currentView === 'plane' && flightRoster && (
                     console.log('Flight Roster:', flightRoster),
                     <>
-                        <p><strong>Menu:</strong> {flightRoster.menu}</p>
+                        <p><strong>Menu:</strong> {flightRoster.menu.join(', ')}</p>
                         <SeatMap flightRoster={flightRoster} />
                     </>
                 )}
