@@ -234,11 +234,11 @@ module.exports = function createMainSystemRouter(supabaseKey) {
   
   router.get('/get-tabular-view', async (req, res) => {
     try {
-      const { flight_num } = req.query; // Use query parameters for GET requests
+      const { flightnum: flightnum } = req.query; // Use query parameters for GET requests
   
       // Fetch flight information
       const flightInfoResponse = await axios.get('http://localhost:5001/flight-info/find_flight_information', {
-        params: { flight_num },
+        params: { flight_num: flightnum },
         headers: { 'Content-Type': 'application/json' }
       });
   
@@ -250,7 +250,7 @@ module.exports = function createMainSystemRouter(supabaseKey) {
       const { data: pilotData, error: pilotError } = await supabase
         .from('flightrosters')
         .select('pilotids')
-        .eq('flightnum', flight_num);
+        .eq('flightnum', flightnum);
   
       if (pilotError) {
         console.error('Error fetching pilotids:', pilotError.message);
@@ -263,7 +263,7 @@ module.exports = function createMainSystemRouter(supabaseKey) {
       const { data: cabinCrewData, error: cabinCrewError } = await supabase
         .from('flightrosters')
         .select('cabincrewids')
-        .eq('flightnum', flight_num);
+        .eq('flightnum', flightnum);
   
       if (cabinCrewError) {
         console.error('Error fetching cabincrewids:', cabinCrewError.message);
@@ -298,7 +298,7 @@ module.exports = function createMainSystemRouter(supabaseKey) {
   
       // Fetch passenger details from the defined endpoint
       const passengersResponse = await axios.get('http://localhost:5001/passenger-info/get-passengers', {
-        params: { flight_num },
+        params: { flightnum: flightnum },
         headers: { 'Content-Type': 'application/json' }
       });
       const passengers = passengersResponse.data.map(passenger => ({
@@ -328,11 +328,11 @@ module.exports = function createMainSystemRouter(supabaseKey) {
 
   router.get('/get-extended-view', async (req, res) => {
     try {
-      const { flight_num } = req.query; // Use query parameters for GET requests
+      const { flight_num: flightnum } = req.query; // Use query parameters for GET requests
   
       // Fetch flight information
       const flightInfoResponse = await axios.get('http://localhost:5001/flight-info/find_flight_information', {
-        params: { flight_num },
+        params: { flight_num: flightnum },
         headers: { 'Content-Type': 'application/json' }
       });
   
@@ -344,7 +344,7 @@ module.exports = function createMainSystemRouter(supabaseKey) {
       const { data: pilotData, error: pilotError } = await supabase
         .from('flightrosters')
         .select('pilotids')
-        .eq('flightnum', flight_num);
+        .eq('flightnum', flightnum);
   
       if (pilotError) {
         console.error('Error fetching pilotids:', pilotError.message);
@@ -357,7 +357,7 @@ module.exports = function createMainSystemRouter(supabaseKey) {
       const { data: cabinCrewData, error: cabinCrewError } = await supabase
         .from('flightrosters')
         .select('cabincrewids')
-        .eq('flightnum', flight_num);
+        .eq('flightnum', flightnum);
   
       if (cabinCrewError) {
         console.error('Error fetching cabincrewids:', cabinCrewError.message);
@@ -382,7 +382,7 @@ module.exports = function createMainSystemRouter(supabaseKey) {
       const cabinCrew = cabinCrewDetailsResponse.data;
 
       const passengersResponse = await axios.get('http://localhost:5001/passenger-info/get-passengers', {
-        params: { flight_num },
+        params: { flightnum: flightnum },
         headers: { 'Content-Type': 'application/json' }
       });
       const passengers = passengersResponse.data;
