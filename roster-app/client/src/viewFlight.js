@@ -38,14 +38,19 @@ const ViewFlight = () => {
     return (
         <div className="view-flight-page">
             <nav className='viewflight-navbar'>
-                <Link to="/" className='nav-item'>Home</Link>
-                <Link to="/management" className='nav-item'>User Management</Link>
-                <Link to="/settings" className='nav-item'>Settings</Link>
-                <Link to="/flights" className='nav-item'>Flights</Link>
+                <div className="left-section">
+                    <Link to="/dashboard">
+                        <img src="./logowhite.png" alt="Logo" className="logo" />
+                    </Link>
+                </div>
+                <h1 className='header'>Flight Details</h1>
+                <div className="right-section">
+                    <Link to="/login" className='nav-item-logout'>Sign Out</Link>
+                    <Link to="/dashboard" className='nav-item'>Home</Link>
+                </div>
             </nav>
             {flight && flight.flight_num && (
                 <div className='flight-details'>
-                    <h1>Flight Details</h1>
                     <p><strong>Flight Number:</strong> {flight.flight_num}</p>
                     <p><strong>Date:</strong> {flight.date}</p>
                     <p><strong>Time: </strong>{flight.time}</p>

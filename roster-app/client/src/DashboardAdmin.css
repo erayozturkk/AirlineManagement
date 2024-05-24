@@ -1,44 +1,44 @@
-/* General Body Styling */
 body.dashboard-page {
     font-family: Arial, sans-serif;
-    /* Set the font for the entire page */
     margin: 0;
     padding: 0;
     background: #f4f4f4;
 }
 
-/* Navbar Styling */
 .dashboard-navbar {
     display: flex;
-    background-color: #002277;
+    background-color: #333;
     color: white;
     padding: 10px 20px;
     align-items: center;
-    justify-content: space-between;
     border-radius: 10px;
 }
 
-.nav-item {
-    color: #002277;
-    text-decoration: none;
-    padding: 10px 15px;
-    background-color: white;
-    border-radius: 5px;
+.dashboard-navbar .logo {
+    margin-right: 20px;
+    max-width: 50px;
+    width: auto;
+    height: auto;
+    margin-bottom: 8%;
+    margin-top: -5%;
+}
+
+.dashboard-navbar .header {
+    flex-grow: 1;
+    text-align: match-parent;
 }
 
 .nav-item:hover {
     background-color: #555;
 }
 
-/* Header Styling */
 .dashboard-header {
     text-align: center;
     padding: 20px;
     background: #eee;
-    color: #002277
+    color: #333
 }
 
-/* Menu Styling */
 .dashboard-menu {
     display: flex;
     flex-direction: column;
@@ -65,7 +65,7 @@ body.dashboard-page {
 
 .dashboard-menu button {
     padding: 10px 20px;
-    background-color: #002277;
+    background-color: #333;
     color: white;
     border: none;
     cursor: pointer;
@@ -87,8 +87,8 @@ body.dashboard-page {
 .dashboard-menu-item label {
     text-align: center;
     border-radius: 5px;
-    border: solid 1px #002277;
-    background-color: #002277;
+    border: solid 1px #333;
+    background-color: #333;
     color: white;
     border-radius: 10px;
 }
@@ -111,8 +111,35 @@ body.dashboard-page {
 }
 
 .nav-item {
+    color: #333;
     text-decoration: none;
-    color: #007bff;
+    padding: 10px 15px;
+    margin: 0;
+    background-color: white;
+    border-radius: 5px;
+}
+
+.dashboard-navbar .nav-item,
+.dashboard-navbar .nav-item-logout {
+    color: #333;
+    text-decoration: none;
+    padding: 10px 15px;
+    margin: 0;
+    margin-right: 0.5%;
+    background-color: white;
+    border-radius: 5px;
+    justify-content: space-between;
+}
+
+.dashboard-navbar .nav-item:hover,
+.dashboard-navbar .nav-item-logout:hover {
+    color: white;
+    background-color: #555;
+}
+
+.nav-item {
+    text-decoration: none;
+    color: #333;
 }
 
 .dashboard-header {
@@ -157,7 +184,7 @@ body.dashboard-page {
 
 .result-buttons button {
     margin-left: 10px;
-    background-color: #002277;
+    background-color: #333;
     color: white;
     border: none;
     cursor: pointer;
@@ -173,6 +200,7 @@ body.dashboard-page {
     display: flex;
     justify-content: center;
     margin-bottom: 20px;
+    color: #333;
 }
 
 .search-toggle button {
@@ -182,8 +210,12 @@ body.dashboard-page {
 }
 
 .search-toggle .active {
-    background-color: #007bff;
+    background-color: #555;
     color: white;
+}
+
+.search-toggle button  {
+    color: #333;
 }
 
 .dashboard-menu form {
