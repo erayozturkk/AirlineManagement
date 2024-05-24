@@ -34,26 +34,18 @@ app.get('/', (req, res) => {
   res.send('Welcome to the homepage');
 });
 
-const verifyToken = require('./middleware/authMiddleware');
-
-// Apply verifyToken middleware to protected routes
-app.use('/cabin-crew', verifyToken, CabinCrewRouter);
-app.use('/flight-info', verifyToken, FlightInfoRouter);
-app.use('/flight-crew', verifyToken, FlightCrewRouter);
-app.use('/passenger-info', verifyToken, PassengerCrewRouter);
-app.use('/main-system', verifyToken, MainSystemRouter);
-app.use('/aircraft', verifyToken, AircraftAPI);
-
-
+app.use('/auth', authRouter);
 const cabinCrewRouter = CabinCrewRouter(supabaseKey);
-
+app.use('/cabin-crew', cabinCrewRouter);
 const flightInfoRouter = FlightInfoRouter(supabaseKey);
-
+app.use('/flight-info', flightInfoRouter);
 const flightCrewRouter = FlightCrewRouter(supabaseKey);
-
+app.use('/flight-crew', flightCrewRouter);
 const passengerInfoRouter = PassengerCrewRouter(supabaseKey);
+app.use('/passenger-info', passengerInfoRouter);
 const mainSystemRouter = MainSystemRouter(supabaseKey);
-
+app.use('/main-system', mainSystemRouter);
+app.use('/aircraft', AircraftAPI);
 
 // Start the server
 const PORT = process.env.PORT || 5001;
