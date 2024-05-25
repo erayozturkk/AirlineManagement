@@ -298,7 +298,7 @@ module.exports = function createCabinCrewInfoRouter(supabaseKey) {
     router.get('/find-crew-members', async (req, res) => {
       try {
         // Extract parameters from the query string
-        var { id, name, gender, nationality, attendanttype, vehiclerestriction, limit } = req.query;
+        let { id, name, gender, nationality, attendanttype, vehiclerestriction, limit } = req.query;
         // Get aircrafts
         const { data: aircraftData, error: aircraftError } = await supabase
         .from('aircrafts')
