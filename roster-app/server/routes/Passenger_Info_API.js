@@ -36,63 +36,75 @@ module.exports = function createFlightInfoRouter(supabaseKey) {
         }
   
 
-    // Endpoint to get passengers
-    router.get('/get-passengers', async (req, res) => {
-        try {
+        // Endpoint to get passengers
+        router.get('/get-passengers', async (req, res) => {
+          try {
             const {
-                id,
-                flightnum,
-                name,
-                age,
-                gender,
-                nationality,
-                seattype,
-                seatnumber,
-                parentid,
-                affiliatedpassenger
+              id,
+              flightnum,
+              name,
+              age,
+              gender,
+              nationality,
+              seattype,
+              seatnumber,
+              parentid,
+              affiliatedpassenger
             } = req.query;
-
+        
             const validSeatTypes = ["business", "economy"];
             if (seattype && !validSeatTypes.includes(seattype)) {
-            return res.status(400).json({ error: `Invalid seattype provided: ${seattype}`, validSeatTypes: validSeatTypes });
+              return res.status(400).json({ error: `Invalid seattype provided: ${seattype}`, validSeatTypes: validSeatTypes });
             }
-            if(id && isNaN(id)){
-                return res.status(400).json({ error: `id should be an integer id: ${id}`   });
-              }
-
+            if (id && isNaN(id)) {
+              return res.status(400).json({ error: `id should be an integer id: ${id}` });
+            }
+        
             let query = supabase.from('passengers').select('*');
-            
+        
             const queryParams = {
-                id,
-                flightnum,
-                name,
-                age,
-                gender,
-                nationality,
-                seattype,
-                seatnumber,
-                parentid,
-                affiliatedpassenger
+              id: id ? parseInt(id) : undefined,
+              flightnum,
+              name,
+              age: age ? parseInt(age) : undefined,
+              gender,
+              nationality,
+              seattype,
+              seatnumber,
+              parentid: parentid ? parseInt(parentid) : undefined,
+              affiliatedpassenger
             };
+        
             Object.keys(queryParams).forEach(key => {
-                if (queryParams[key]) {
-                    query = query.eq(key, queryParams[key]);
+              const value = queryParams[key];
+              if (value !== undefined && value !== null) {
+                if (key === 'affiliatedpassenger') {
+                  // Ensure affiliatedpassenger is handled as an array
+                  const affiliatedArray = Array.isArray(value) ? value : [value];
+                  query = query.contains(key, affiliatedArray);
+                } else if (Array.isArray(value)) {
+                  query = query.in(key, value);
+                } else {
+                  query = query.eq(key, value);
                 }
+              }
             });
-
+        
             const { data, error } = await query;
-
+        
             if (error) {
-                console.error('Error fetching passanger information:', error.message);
-                return res.status(500).json({ error: 'Internal server error' });
+              console.error('Error fetching passenger information:', error.message);
+              return res.status(500).json({ error: 'Internal server error' });
             }
-
+        
             res.json(data);
-        } catch (error) {
+          } catch (error) {
             console.error('Supabase connection error:', error.message);
             res.status(500).json({ error: 'Internal server error' });
-        }
-    });
+          }
+        });        
+  
+
     router.post('/add-passenger-info', async (req, res) => {
         try {
             let {
