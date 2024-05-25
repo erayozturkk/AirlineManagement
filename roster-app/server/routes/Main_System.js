@@ -51,8 +51,8 @@ module.exports = function createMainSystemRouter(supabaseKey) {
   
       const flightInfo = flightInfoResponse.data[0];
       const vtype = flightInfo['vehicle_type'];
-      const varray = [];
-      varray.push(vtype);
+      const varr = [];
+      varr.push(vtype);
       const range = flightInfo['distance'];
       const R_date = flightInfo['date'];
       const R_time = flightInfo['time'];
@@ -77,7 +77,7 @@ module.exports = function createMainSystemRouter(supabaseKey) {
       // Fetch flight crew information
       const flightCrewids = (await selectCrew(vtype,range,R_date,R_time,R_duration)).map(crew => crew.id);
       // Fetch cabin crew information
-      let cabincrewdata = await selectCabinCrew(varray,R_date,R_time,R_duration);
+      let cabincrewdata = await selectCabinCrew(varr,R_date,R_time,R_duration);
       const cabinCrewids = cabincrewdata[0].map(crew => crew.id),
             flightMenu = cabincrewdata[1];
      
@@ -414,7 +414,7 @@ module.exports = function createMainSystemRouter(supabaseKey) {
     }
   });
   
-  async function getFilteredCrewMembers(vehicleRestriction, allowedRange, flightDate, flightTime, flightDuration) {
+async function getFilteredCrewMembers(vehicleRestriction, allowedRange, flightDate, flightTime, flightDuration) {
     try {
         // Fetch all matching crew members
         const crewResponse = await axios.get('http://localhost:5001/flight-crew/find-crew-members', {
@@ -422,48 +422,25 @@ module.exports = function createMainSystemRouter(supabaseKey) {
             headers: { 'Content-Type': 'application/json' }
         });
         const crewMembers = crewResponse.data;
-
         const availableCrew = [];
-        let checkedCrewIds = new Set();
-
-        for (let crewMember of crewMembers) {
-            const crewId = crewMember.id;
-
-            if (checkedCrewIds.has(crewId)) continue;
-            checkedCrewIds.add(crewId);
-
-            const { data: existingRosters, error: rosterError } = await supabase
-              .from('flightrosters')
-              .select('*')
-              .contains('pilotids', [parseInt(crewId)]);
-
-            if (rosterError) {
-                throw rosterError;
+        
+        for(let crewMember of crewMembers){
+          if(crewMember.flight_times){ // all flight times of this pilot
+            let isAvailable= true;
+            for(let flight_time of crewMember.flight_times){
+              if(isTimeConflict(flightDate,flightTime,flightDuration,flight_time['date'],flight_time['time'],flight_time['duration'])){// if we find a time conflict
+                isAvailable = false;
+                break;
+              }
             }
-            let isAvailable = true;
-
-            for (let roster of existingRosters) {
-                const { data: flightInfo, error: flightInfoError } = await supabase
-                    .from('flight_info')
-                    .select('date, time, duration')
-                    .eq('flight_num', roster.flightnum)
-                    .single();
-
-                if (flightInfoError) {
-                    throw flightInfoError;
-                }
-
-                if (isTimeConflict(flightDate, flightTime, flightDuration, flightInfo.date, flightInfo.time, flightInfo.duration)) {
-                    isAvailable = false;
-                    break;
-                }
+            if(isAvailable){
+              availableCrew.push(crewMember);
             }
-
-            if (isAvailable) {
-                availableCrew.push(crewMember);
-            }
+          }
+          else{// if there are no flights assigned for that pilot
+            availableCrew.push(crewMember);
+          }
         }
-
         return availableCrew;
     } catch (error) {
         console.error('Error fetching and filtering crew members:', error.message);
@@ -478,50 +455,25 @@ async function getFilteredCabinCrewMembers(vehicleRestriction, flightDate, fligh
           headers: { 'Content-Type': 'application/json' }
       });
       const cabinCrewMembers = cabinCrewResponse.data;
-
-      const availableCabinCrew = [];
-      let checkedCrewIds = new Set();
-
+      const availableCrew = [];
       for (let crewMember of cabinCrewMembers) {
-          const crewId = crewMember.id;
-
-          if (checkedCrewIds.has(crewId)) continue;
-          checkedCrewIds.add(crewId);
-
-          const { data: existingRosters, error: rosterError } = await supabase
-          .from('flightrosters')
-          .select('*')
-          .filter('cabincrewids', 'cs', `{${crewId}}`);
-
-          if (rosterError) {
-              throw rosterError;
+        if(crewMember.flight_times){ // all flight times of this cabin crew member
+          let isAvailable= true;
+          for(let flight_time of crewMember.flight_times){
+            if(isTimeConflict(flightDate,flightTime,flightDuration,flight_time['date'],flight_time['time'],flight_time['duration'])){// if we find a time conflict
+              isAvailable = false;
+              break;
+            }
           }
-          
-          let isAvailable = true;
-
-          for (let roster of existingRosters) {
-              const { data: flightInfo, error: flightInfoError } = await supabase
-                  .from('flight_info')
-                  .select('date, time, duration')
-                  .eq('flight_num', roster.flightnum)
-                  .single();
-
-              if (flightInfoError) {
-                  throw flightInfoError;
-              }
-              
-              if (isTimeConflict(flightDate, flightTime, flightDuration, flightInfo.date, flightInfo.time, flightInfo.duration)) {
-                  isAvailable = false;
-                  break;
-              }
+          if(isAvailable){
+            availableCrew.push(crewMember);
           }
-
-          if (isAvailable) {
-              availableCabinCrew.push(crewMember);
-          }
+        }
+        else{// if there are no flights assigned for that cabin crew member
+          availableCrew.push(crewMember);
+        }
       }
-
-      return availableCabinCrew;
+      return availableCrew;
   } catch (error) {
       console.error('Error fetching and filtering cabin crew members:', error.message);
       throw error;
