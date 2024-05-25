@@ -250,7 +250,16 @@ router.post('/add-flight-info', async (req, res) => {
         async function checkForUnique(date, time, origin_airport_name, destination_airport_name) {
           try {
               // Convert date to GMT string for consistency
-              const gmtDateString = date.toISOString().split('T')[0];
+              let gmtDateString;
+              
+              if(typeof date ==="string"){
+                gmtDateString = date;
+                
+              }
+              else{
+                gmtDateString = date.toISOString().split('T')[0];
+              }
+
       
               // Format time to ensure consistent format
               const formattedTime = time.padStart(5, '0'); // Ensure time is in HH:MM format
@@ -281,7 +290,7 @@ router.post('/add-flight-info', async (req, res) => {
         if(checkForUnique(toinDate,toinTime,toinOriginairport['Airport Name'],toinDestinationairport['Airport Name'])){
           const newFlightInfo = {
             flight_num: toinFlightNumber,
-            date: toinDate,
+            date: toinDate.toISOString().split('T')[0],
             duration: toinDuration,
             distance: toinDistance,
             origin_country: toinOriginairport.Country,
@@ -340,8 +349,8 @@ router.post('/add-flight-info', async (req, res) => {
   
 // Helper function to generate a random date between 03-05-2024:00.00 to 03-05-2026:23.59 in UTC format
 function generateRandomDate() {
-  const start = new Date(2024, 4, 3, 0, 0); // 03-05-2024:00.00 UTC
-  const end = new Date(2026, 4, 3, 23, 59); // 03-05-2026:23.59 UTC
+  const start = new Date(2024, 4, 3); // 03-05-2024:00.00 UTC
+  const end = new Date(2026, 4, 3); // 03-05-2026:23.59 UTC
   const randomTime = start.getTime() + Math.random() * (end.getTime() - start.getTime());
   return new Date(randomTime);
 }

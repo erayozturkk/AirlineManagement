@@ -529,14 +529,16 @@ async function selectCabinCrew(vehicleRestriction, flightDate, flightTime, fligh
   if (seniorAttendants.length < 1 || juniorAttendants.length < 4) {
       throw new Error('Not enough senior or junior attendants available');
   }
-
+  const shuffledsenior = seniorAttendants.sort(()=> 0.5 - Math.random());
+  const shuffledjunior = juniorAttendantsAttendants.sort(()=> 0.5 - Math.random());
+  const shufflechefs = chefs.sort(()=> 0.5 - Math.random());
   const selectedCrew = [];
-  selectedCrew.push(...seniorAttendants.slice(0, Math.min(seniorAttendants.length, 4))); // 1-4 senior attendants
-  selectedCrew.push(...juniorAttendants.slice(0, Math.min(juniorAttendants.length, 16))); // 4-16 junior attendants
+  selectedCrew.push(...shuffledsenior.slice(0, Math.min(seniorAttendants.length, 4))); // 1-4 senior attendants
+  selectedCrew.push(...shuffledjunior.slice(0, Math.min(juniorAttendants.length, 16))); // 4-16 junior attendants
   const flightmenu = [];
   const chefCount = Math.min(chefs.length, 2);
   for (let i = 0; i < chefCount; i++) {
-      const chef = chefs[i];
+      const chef = shufflechefs[i];
       selectedCrew.push(chef);
 
       // Add a random dish from the chef to the flight menu
