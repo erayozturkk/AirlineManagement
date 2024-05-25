@@ -311,6 +311,9 @@ module.exports = function createCabinCrewInfoRouter(supabaseKey) {
         const aircrafts = aircraftData.map(aircraft => aircraft.vehicletype);
         const validAttendantTypes = ["chief", "regular", "chef"];
         // Input checks
+        if(id && isNaN(id)){
+          return res.status(400).json({ error: `id should be an integer id: ${id}`   });
+        }
         if (limit && limit < 1) {
           return res.status(400).json({ error: `Limit cannot be less than 1 limit: ${limit}`   });
         }

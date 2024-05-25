@@ -56,6 +56,9 @@ module.exports = function createFlightInfoRouter(supabaseKey) {
             if (seattype && !validSeatTypes.includes(seattype)) {
             return res.status(400).json({ error: `Invalid seattype provided: ${seattype}`, validSeatTypes: validSeatTypes });
             }
+            if(id && isNaN(id)){
+                return res.status(400).json({ error: `id should be an integer id: ${id}`   });
+              }
 
             let query = supabase.from('passengers').select('*');
             
