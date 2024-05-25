@@ -90,8 +90,11 @@ router.post('/add-flight-info', async (req, res) => {
         limit
     } = req.query;
     // Input checks
-    if (limit && limit < 1) {
-      return res.status(400).json({ error: `Limit cannot be less than 1 limit: ${limit}`   });
+    if (limit &&(isNaN(limit) || limit < 1)) {
+      return res.status(400).json({ error: `Limit should be a positive integer limit: ${limit}`   });
+    }
+    if(!(flight_num.substring(0, 2).toUpperCase() === "TK")){
+      return res.status(400).json({ error: `The flight_num should start with TK: ${flight_num}`   });
     }
     let limitNumber;
     if(limit){

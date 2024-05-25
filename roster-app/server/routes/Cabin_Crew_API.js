@@ -72,9 +72,9 @@ module.exports = function createCabinCrewInfoRouter(supabaseKey) {
            }
          }
        }
-       if (age && age < 18) {
-         return res.status(400).json({ error: 'Age cannot be less than 18', age: age });
-       }
+       if (age &&( (age < 18) || isNaN(age))) {
+        return res.status(400).json({ error: 'Age must be an integer less than 18', age: age });
+        } 
        const arr = [name, gender,nationality];
        capitalizeInput(arr)
        name = arr[0];
@@ -153,8 +153,8 @@ module.exports = function createCabinCrewInfoRouter(supabaseKey) {
       const validAttendantTypes = ["chief", "regular", "chef"];
 
       // Input checks
-      if (limit < 1) {
-        return res.status(400).json({ error: `Limit cannot be less than 1 limit: ${limit}`   });
+      if (limit &&(isNaN(limit) || limit < 1)) {
+        return res.status(400).json({ error: `Limit should be a positive integer limit: ${limit}`   });
       }
       if (attendanttype && !validAttendantTypes.includes(attendanttype)) {
         return res.status(400).json({ error: `Invalid attendanttype provided: ${attendanttype}`, validAttendantTypes: validAttendantTypes });
@@ -237,6 +237,10 @@ module.exports = function createCabinCrewInfoRouter(supabaseKey) {
       try {
         // Extract the limit parameter from the query string
         const { limit } = req.query;
+
+        if (limit &&(isNaN(limit) || limit < 1)) {
+          return res.status(400).json({ error: `Limit should be a positive integer limit: ${limit}`   });
+        }
         
         // Convert the limit parameter to a number
         const limitNumber = limit ? parseInt(limit) : 10; // Default limit is 10 if not provided
@@ -314,8 +318,8 @@ module.exports = function createCabinCrewInfoRouter(supabaseKey) {
         if(id && isNaN(id)){
           return res.status(400).json({ error: `id should be an integer id: ${id}`   });
         }
-        if (limit && limit < 1) {
-          return res.status(400).json({ error: `Limit cannot be less than 1 limit: ${limit}`   });
+        if (limit &&(isNaN(limit) || limit < 1)) {
+          return res.status(400).json({ error: `Limit should be a positive integer limit: ${limit}`   });
         }
         if (attendanttype && !validAttendantTypes.includes(attendanttype)) {
           return res.status(400).json({ error: `Invalid attendanttype provided: ${attendanttype}`, validAttendantTypes: validAttendantTypes });

@@ -109,9 +109,12 @@ module.exports = function createFlightInfoRouter(supabaseKey) {
                 affiliatedpassenger
             } = req.query;
 
-        if (limit && limit < 1) {
-            return res.status(400).json({ error: `Limit cannot be less than 1 limit: ${limit}`   });
-            }
+        if (limit &&(isNaN(limit) || limit < 1)) {
+            return res.status(400).json({ error: `Limit should be a positive integer limit: ${limit}`   });
+        }
+        if(id && isNaN(id)){
+            return res.status(400).json({ error: `id should be an integer id: ${id}`   });
+        }
         
          
         let limitNumber;
@@ -130,6 +133,9 @@ module.exports = function createFlightInfoRouter(supabaseKey) {
         if (seattype && !validSeatTypes.includes(seattype)) {
           return res.status(400).json({ error: `Invalid seattype provided: ${seattype}`, validSeatTypes: validSeatTypes });
         }
+        if (age &&( ( 0 >= age) || isNaN(age))) {
+            return res.status(400).json({ error: 'Age must be a non negative integer', age: age });
+            } 
 
         const { data: existingFlights, error: flightInfoError } = await supabase
         .from('flight_info')

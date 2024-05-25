@@ -72,12 +72,15 @@ module.exports = function createFlightCrewInfoRouter(supabaseKey) {
         if (seniorityLevel && !validPilotTypes.includes(seniorityLevel)) {
           return res.status(400).json({ error: `Invalid attendanttype provided: ${seniorityLevel}`, validPilotTypes: validPilotTypes });
         }
+        if(allowedRange &&( allowedRange<1000 || isNaN(allowedRange))){
+          return res.status(400).json({ error: `Invalid allowedRange provided allowedRange: ${allowedRange}`});
+        }
 
         if (vehiclerestriction && !aircrafts.includes(vehiclerestriction)) {
           return res.status(400).json({ error: `Invalid vehiclerestriction provided: ${vehiclerestriction}`, validAircrafts: aircrafts });
         }
-        if (age && age < 18) {
-          return res.status(400).json({ error: 'Age cannot be less than 18', age: age });
+        if (age &&( (age < 18) || isNaN(age))) {
+          return res.status(400).json({ error: 'Age must be an integer less than 18', age: age });
           } 
 
 
@@ -152,8 +155,8 @@ module.exports = function createFlightCrewInfoRouter(supabaseKey) {
             const validPilotTypes = ["Senior", "Junior", "Trainee"];
 
             // Input checks
-            if (limit && limit < 1) {
-              return res.status(400).json({ error: `Limit cannot be less than 1 limit: ${limit}`   });
+            if (limit &&(isNaN(limit) || limit < 1)) {
+              return res.status(400).json({ error: `Limit should be a positive integer limit: ${limit}`   });
             }
             if (seniorityLevel && !validPilotTypes.includes(seniorityLevel)) {
               return res.status(400).json({ error: `Invalid attendanttype provided: ${seniorityLevel}`, validPilotTypes: validPilotTypes });
@@ -219,6 +222,10 @@ module.exports = function createFlightCrewInfoRouter(supabaseKey) {
       try {
         // Extract the limit parameter from the query string
         const { limit } = req.query;
+
+        if (limit &&(isNaN(limit) || limit < 1)) {
+          return res.status(400).json({ error: `Limit should be a positive integer limit: ${limit}`   });
+        }
         const limitNumber = limit ? parseInt(limit) : 10; // Default limit is 10 if not provided
     
         // Construct the query
@@ -288,11 +295,14 @@ module.exports = function createFlightCrewInfoRouter(supabaseKey) {
             const aircrafts = aircraftData.map(aircraft => aircraft.vehicletype);
             const validPilotTypes = ["Senior", "Junior", "Trainee"];
             // Input checks
+            if(allowedRange && isNaN(allowedRange)){
+              return res.status(400).json({ error: `allowedRange should be an integer allowedRange: ${allowedRange}`   });
+            }
             if(id && isNaN(id)){
               return res.status(400).json({ error: `id should be an integer id: ${id}`   });
             }
-            if (limit && limit < 1) {
-              return res.status(400).json({ error: `Limit cannot be less than 1 limit: ${limit}`   });
+            if (limit &&(isNaN(limit) || limit < 1)) {
+              return res.status(400).json({ error: `Limit should be a positive integer limit: ${limit}`   });
             }
             if (seniorityLevel && !validPilotTypes.includes(seniorityLevel)) {
               return res.status(400).json({ error: `Invalid attendanttype provided: ${seniorityLevel}`, validPilotTypes: validPilotTypes });
