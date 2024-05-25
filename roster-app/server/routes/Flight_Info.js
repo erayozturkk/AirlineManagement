@@ -89,7 +89,10 @@ router.post('/add-flight-info', async (req, res) => {
         shared_flight_company,
         limit
     } = req.query;
-      
+    // Input checks
+    if (limit && limit < 1) {
+      return res.status(400).json({ error: `Limit cannot be less than 1 limit: ${limit}`   });
+    }
     let limitNumber;
     if(limit){
       limitNumber=parseInt(limit);
@@ -182,7 +185,7 @@ router.post('/add-flight-info', async (req, res) => {
         if(origin_airport_name){
           const matchedAirport = airports.find(airport => airport['Airport Name'] === origin_airport_name);
           if(!matchedAirport){
-            throw new Error(`Origin airport "${origin_airport_name}" not found in the database.`);
+            return res.status(400).json({error:`Origin airport "${origin_airport_name}" not found in the database.`});
           }
           else{
             toinOriginairport=matchedAirport;
@@ -194,11 +197,11 @@ router.post('/add-flight-info', async (req, res) => {
         if(destination_airport_name){
           const matchedAirport = airports.find(airport => airport['Airport Name'] === destination_airport_name);
           if(!matchedAirport){
-            throw new Error(`Origin airport "${destination_airport_name}" not found in the database.`);
+            return res.status(400).json({error:`Origin airport "${destination_airport_name}" not found in the database.`});
           }
           else{
             if(matchedAirport['Airport Name']===toinOriginairport['Airport Name']){
-              throw new Error(`Destination airport can not be same with the origin airport.`);
+              return res.status(400).json({error:`Destination airport can not be same with the origin airport.`});
             }
             else{
               toinDestinationairport = matchedAirport;
@@ -244,7 +247,7 @@ router.post('/add-flight-info', async (req, res) => {
         if(vehicle_type){
           const matchedVehicle=aircrafts.find(aircrafts=>aircrafts['vehicletype']===vehicle_type);
           if(!matchedVehicle){
-            throw new Error(`Provided vehicletype "${vehicle_type}" is not in the database`)
+            return res.status(400).json({error:`Provided vehicletype "${vehicle_type}" is not in the database`})
           }
           else{
             toinVehicle=vehicle_type;
