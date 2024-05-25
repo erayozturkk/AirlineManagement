@@ -98,6 +98,7 @@ router.post('/add-flight-info', async (req, res) => {
       limitNumber=1;
     }
     const addedFlights = [];
+    var shouldchange = false;
       for (let i = 0; i < limitNumber; i++) {
 
 
@@ -124,7 +125,12 @@ router.post('/add-flight-info', async (req, res) => {
         //ganerate random date if not provided in request
         let toinDate;
         if(date){
-          toinDate=date;
+          if(!shouldchange){
+            toinDate=date;
+          }
+          else{
+            toinDate = generateRandomDate();
+          }
         }
         else{
           toinDate = generateRandomDate();
@@ -252,7 +258,7 @@ router.post('/add-flight-info', async (req, res) => {
               // Convert date to GMT string for consistency
               let gmtDateString;
               
-              if(typeof date ==="string"){
+              if(typeof date =="string"){
                 gmtDateString = date;
                 
               }
@@ -263,7 +269,6 @@ router.post('/add-flight-info', async (req, res) => {
       
               // Format time to ensure consistent format
               const formattedTime = time.padStart(5, '0'); // Ensure time is in HH:MM format
-      
               const { data: existingFlights, error: flight_infoError } = await supabase
                   .from('flight_info')
                   .select('*')
@@ -275,8 +280,12 @@ router.post('/add-flight-info', async (req, res) => {
               if (flight_infoError) {
                   throw flight_infoError;
               }
-      
-              return existingFlights.length === 0;
+              if(existingFlights.length === 0){
+                return true;
+              }
+              else{
+                return false;
+              }
           } catch (error) {
               console.error('Error checking for unique flights:', error.message);
               return false; // Return false to indicate an error occurred
@@ -287,10 +296,16 @@ router.post('/add-flight-info', async (req, res) => {
 
     
         // Insert the flight information into the Supabase table
-        if(checkForUnique(toinDate,toinTime,toinOriginairport['Airport Name'],toinDestinationairport['Airport Name'])){
+        if(await checkForUnique(toinDate,toinTime,toinOriginairport['Airport Name'],toinDestinationairport['Airport Name'])){
+          shouldchange=false;
+          if(typeof toinDate =="string"){
+          }
+          else{
+            toinDate = toinDate.toISOString().split('T')[0];
+          }
           const newFlightInfo = {
             flight_num: toinFlightNumber,
-            date: toinDate.toISOString().split('T')[0],
+            date: toinDate,
             duration: toinDuration,
             distance: toinDistance,
             origin_country: toinOriginairport.Country,
@@ -317,6 +332,7 @@ router.post('/add-flight-info', async (req, res) => {
         addedFlights.push(newFlightInfo);
       }
       else{
+        shouldchange = true;
         i--;
       }
     }
