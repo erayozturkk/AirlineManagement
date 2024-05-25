@@ -72,7 +72,7 @@ module.exports = function createCabinCrewInfoRouter(supabaseKey) {
            }
          }
        }
-       if (age < 18) {
+       if (age && age < 18) {
          return res.status(400).json({ error: 'Age cannot be less than 18', age: age });
        }
        const arr = [name, gender,nationality];
@@ -203,8 +203,12 @@ module.exports = function createCabinCrewInfoRouter(supabaseKey) {
       for (let i = 0; i < limitNumber; i++) {
         const newCrewMember = CabinCrew.generateRandom();
         newCrewMember.id = uId + i; // Increment the id for each new cabin crew member
-        newCrewMember.setVehiclerestriction(vehiclerestriction);
-        newCrewMember.setAttendanttype(attendanttype)
+        if(vehiclerestriction){
+          newCrewMember.setVehiclerestriction(vehiclerestriction);
+        }
+        if(attendanttype){
+          newCrewMember.setAttendanttype(attendanttype)
+        }
         newCrewMembers.push(newCrewMember);
       }
   
