@@ -45,7 +45,7 @@ module.exports = function createCabinCrewInfoRouter(supabaseKey) {
   router.post('/add-crew-member', async (req, res) => {
     try {
        // Extract parameters from the request query
-        var { name, age, gender, nationality, languages, attendanttype, vehiclerestriction } = req.query;
+        let { name, age, gender, nationality, languages, attendanttype, vehiclerestriction } = req.query;
 
         // Get aircrafts list
         const { data: aircraftData, error: aircraftError } = await supabase

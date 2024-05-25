@@ -44,7 +44,7 @@ module.exports = function createFlightCrewInfoRouter(supabaseKey) {
         
     
         // Extract parameters from the request query with fallback values
-        var {
+        let {
           name,
           age,
           gender,

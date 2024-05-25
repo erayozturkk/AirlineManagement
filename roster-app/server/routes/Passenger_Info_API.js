@@ -11,6 +11,31 @@ module.exports = function createFlightInfoRouter(supabaseKey) {
     const supabaseUrl = "https://hsixajfgpamanbqvxyyw.supabase.co";
     const supabase = createClient(supabaseUrl, supabaseKey);
 
+    // Utility function to capitalize the first letter of each word
+    function capitalizeNames(names) {
+        for (let i = 0; i < names.length; i++) {
+          if(names[i]){
+            names[i] = capitalizeName(names[i])
+          }
+        }
+      }
+      function capitalizeName(name) {
+          return name
+            .split(' ')
+            .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+            .join(' ');
+        }
+      function capitalizeInput(input) {
+          if (input & typeof input === 'string') {
+            return capitalizeName(input);
+          } else if (Array.isArray(input)) {
+            return capitalizeNames(input);
+          } else {
+            throw new Error("Input must be a string or an array of strings");
+          }
+        }
+  
+
     // Endpoint to get passengers
     router.get('/get-passengers', async (req, res) => {
         try {
@@ -26,6 +51,11 @@ module.exports = function createFlightInfoRouter(supabaseKey) {
                 parentid,
                 affiliatedpassenger
             } = req.query;
+
+            const validSeatTypes = ["business", "economy"];
+            if (seattype && !validSeatTypes.includes(seattype)) {
+            return res.status(400).json({ error: `Invalid seattype provided: ${seattype}`, validSeatTypes: validSeatTypes });
+            }
 
             let query = supabase.from('passengers').select('*');
             
@@ -62,7 +92,7 @@ module.exports = function createFlightInfoRouter(supabaseKey) {
     });
     router.post('/add-passenger-info', async (req, res) => {
         try {
-            const {
+            let {
                 id,
                 flightnum,
                 name,
@@ -75,7 +105,12 @@ module.exports = function createFlightInfoRouter(supabaseKey) {
                 limit,
                 affiliatedpassenger
             } = req.query;
-          
+
+        if (limit && limit < 1) {
+            return res.status(400).json({ error: `Limit cannot be less than 1 limit: ${limit}`   });
+            }
+        
+         
         let limitNumber;
         if(limit){
           limitNumber=parseInt(limit);
@@ -83,6 +118,16 @@ module.exports = function createFlightInfoRouter(supabaseKey) {
         else{
           limitNumber=5;
         }
+        // Input checks 
+        if((limit > 1 )&& seattype){
+            return res.status(400).json({ error: `You cant assign more than one passenger to the same seat`});
+        }
+        const validSeatTypes = ["business", "economy"];
+       
+        if (seattype && !validSeatTypes.includes(seattype)) {
+          return res.status(400).json({ error: `Invalid seattype provided: ${seattype}`, validSeatTypes: validSeatTypes });
+        }
+
         const { data: existingFlights, error: flightInfoError } = await supabase
         .from('flight_info')
         .select('flight_num, shared_flight_number, vehicle_type')
@@ -108,12 +153,13 @@ module.exports = function createFlightInfoRouter(supabaseKey) {
             throw aircraftDataError;
         }
         const max_seats = aircraftData[0].numberofseats;
+        
         const { data: passanger, error: passengerError } = await supabase
         .from('passengers')
         .select('*')
         .eq('flightnum', flightnum);
         const numberofpassengers = passanger.length;
-        if(numberofpassengers+limit>max_seats){
+        if((numberofpassengers+limitNumber)>max_seats){
             return res.status(400).json({error: 'There is not enough seats left for this number of passengers: '},limit);
         }
         const seatingPlan = aircraftData[0].seatingplan;
@@ -130,6 +176,12 @@ module.exports = function createFlightInfoRouter(supabaseKey) {
 
         // Calculate the next available id
         let nextId = lastCrewMember.length > 0 ? lastCrewMember[0].id + 1 : 1;
+
+        const arr = [name, gender,nationality];
+        capitalizeInput(arr)
+        name = arr[0];
+        gender = arr[1];
+        nationality = arr[2];
 
         
         for (let i = 0; i < limitNumber; i++) {
