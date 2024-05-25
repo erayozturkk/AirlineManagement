@@ -44,6 +44,47 @@ module.exports = function createCabinCrewInfoRouter(supabaseKey) {
   // POST route to add a new crew member
   router.post('/add-crew-member', async (req, res) => {
     try {
+       // Extract parameters from the request query
+        var { name, age, gender, nationality, languages, attendanttype, vehiclerestriction } = req.query;
+
+        // Get aircrafts list
+        const { data: aircraftData, error: aircraftError } = await supabase
+        .from('aircrafts')
+        .select('vehicletype');
+        
+        if (aircraftError) {
+          throw aircraftError;
+        }
+        const aircrafts = aircraftData.map(aircraft => aircraft.vehicletype);
+
+       const validAttendantTypes = ["chief", "regular", "chef"];
+       // Input checks 
+       if (attendanttype && !validAttendantTypes.includes(attendanttype)) {
+         return res.status(400).json({ error: `Invalid attendanttype provided: ${attendanttype}`, validAttendantTypes: validAttendantTypes });
+       }
+       if (vehiclerestriction) {
+         if (!Array.isArray(vehiclerestriction)) {
+           return res.status(400).json({ error: 'vehiclerestriction must be an array' });
+         }
+         for (const restriction of vehiclerestriction) {
+           if (!aircrafts.includes(restriction)) {
+             return res.status(400).json({ error: `Invalid vehiclerestriction provided: ${restriction}`, validAircrafts: aircrafts });
+           }
+         }
+       }
+       if (age < 18) {
+         return res.status(400).json({ error: 'Age cannot be less than 18', age: age });
+       }
+       const arr = [name, gender,nationality];
+       capitalizeInput(arr)
+       name = arr[0];
+       gender = arr[1];
+       nationality = arr[2];
+       if(languages){
+         capitalizeInput(languages)
+       }
+
+
       // Get the last id from the database
       const { data: lastCrewMember, error: lastCrewMemberError } = await supabase
         .from('people')
@@ -55,48 +96,13 @@ module.exports = function createCabinCrewInfoRouter(supabaseKey) {
         throw lastCrewMemberError;
       }
 
-      const { data: aircraftData, error: aircraftError } = await supabase
-      .from('aircrafts')
-      .select('vehicletype');
       
-      if (aircraftError) {
-        throw aircraftError;
-      }
-
-      const aircrafts = aircraftData.map(aircraft => aircraft.vehicletype);
       
 
       // Calculate the next available id
       const nextId = lastCrewMember.length > 0 ? lastCrewMember[0].id + 1 : 1;
 
-      // Extract parameters from the request query
-      var { name, age, gender, nationality, languages, attendanttype, vehiclerestriction } = req.query;
-      const validAttendantTypes = ["chief", "regular", "chef"];
-      // Input checks 
-      if (attendanttype && !validAttendantTypes.includes(attendanttype)) {
-        return res.status(400).json({ error: `Invalid attendanttype provided: ${attendanttype}`, validAttendantTypes: validAttendantTypes });
-      }
-      if (vehiclerestriction) {
-        if (!Array.isArray(vehiclerestriction)) {
-          return res.status(400).json({ error: 'vehiclerestriction must be an array' });
-        }
-        for (const restriction of vehiclerestriction) {
-          if (!aircrafts.includes(restriction)) {
-            return res.status(400).json({ error: `Invalid vehiclerestriction provided: ${restriction}`, validAircrafts: aircrafts });
-          }
-        }
-      }
-      if (age < 18) {
-        return res.status(400).json({ error: 'Age cannot be less than 18', age: age });
-      }
-      const arr = [name, gender,nationality];
-      capitalizeInput(arr)
-      name = arr[0];
-      gender = arr[1];
-      nationality = arr[2];
-      if(languages){
-        capitalizeInput(languages)
-      }
+     
       
       
 
@@ -133,6 +139,9 @@ module.exports = function createCabinCrewInfoRouter(supabaseKey) {
   router.post('/add-many-crew-member', async (req, res) => {
     try {
 
+      // Get the queried inputs
+      let { limit, vehiclerestriction, attendanttype } = req.query;
+      // Get aircrafts
       const { data: aircraftData, error: aircraftError } = await supabase
       .from('aircrafts')
       .select('vehicletype');
@@ -140,11 +149,7 @@ module.exports = function createCabinCrewInfoRouter(supabaseKey) {
       if (aircraftError) {
         throw aircraftError;
       }
-
       const aircrafts = aircraftData.map(aircraft => aircraft.vehicletype);
-      let { limit, vehiclerestriction, attendanttype } = req.query;
-
-
       const validAttendantTypes = ["chief", "regular", "chef"];
 
       // Input checks
@@ -172,7 +177,7 @@ module.exports = function createCabinCrewInfoRouter(supabaseKey) {
       }
   
       const limitNumber = parseInt(limit);
-  
+      // Get last id 
       const { data: lastCrewMember, error: lastCrewMemberError } = await supabase
         .from('people')
         .select('id')
@@ -290,6 +295,7 @@ module.exports = function createCabinCrewInfoRouter(supabaseKey) {
       try {
         // Extract parameters from the query string
         var { id, name, gender, nationality, attendanttype, vehiclerestriction, limit } = req.query;
+        // Get aircrafts
         const { data: aircraftData, error: aircraftError } = await supabase
         .from('aircrafts')
         .select('vehicletype');
@@ -318,7 +324,7 @@ module.exports = function createCabinCrewInfoRouter(supabaseKey) {
           }
         }
 
-
+        //Convert strings to first letter upper
         const arr = [name, gender,nationality];
         capitalizeInput(arr)
         name = arr[0];

@@ -51,6 +51,8 @@ module.exports = function createMainSystemRouter(supabaseKey) {
   
       const flightInfo = flightInfoResponse.data[0];
       const vtype = flightInfo['vehicle_type'];
+      const varray = [];
+      varray.push(vtype);
       const range = flightInfo['distance'];
       const R_date = flightInfo['date'];
       const R_time = flightInfo['time'];
@@ -75,7 +77,7 @@ module.exports = function createMainSystemRouter(supabaseKey) {
       // Fetch flight crew information
       const flightCrewids = (await selectCrew(vtype,range,R_date,R_time,R_duration)).map(crew => crew.id);
       // Fetch cabin crew information
-      let cabincrewdata = await selectCabinCrew(vtype,R_date,R_time,R_duration);
+      let cabincrewdata = await selectCabinCrew(varray,R_date,R_time,R_duration);
       const cabinCrewids = cabincrewdata[0].map(crew => crew.id),
             flightMenu = cabincrewdata[1];
      
