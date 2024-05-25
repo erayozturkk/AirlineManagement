@@ -311,7 +311,7 @@ module.exports = function createCabinCrewInfoRouter(supabaseKey) {
         const aircrafts = aircraftData.map(aircraft => aircraft.vehicletype);
         const validAttendantTypes = ["chief", "regular", "chef"];
         // Input checks
-        if (limit < 1) {
+        if (limit && limit < 1) {
           return res.status(400).json({ error: `Limit cannot be less than 1 limit: ${limit}`   });
         }
         if (attendanttype && !validAttendantTypes.includes(attendanttype)) {

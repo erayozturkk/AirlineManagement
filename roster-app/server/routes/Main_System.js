@@ -530,7 +530,7 @@ async function selectCabinCrew(vehicleRestriction, flightDate, flightTime, fligh
       throw new Error('Not enough senior or junior attendants available');
   }
   const shuffledsenior = seniorAttendants.sort(()=> 0.5 - Math.random());
-  const shuffledjunior = juniorAttendantsAttendants.sort(()=> 0.5 - Math.random());
+  const shuffledjunior = juniorAttendants.sort(()=> 0.5 - Math.random());
   const shufflechefs = chefs.sort(()=> 0.5 - Math.random());
   const selectedCrew = [];
   selectedCrew.push(...shuffledsenior.slice(0, Math.min(seniorAttendants.length, 4))); // 1-4 senior attendants
