@@ -40,11 +40,11 @@ class Pilot {
     }
     calculateMaxAllowedRange() {
         if (this.seniorityLevel === 'Senior') {
-            return this.getRandomIntInRange(30, 80) * 100; // Random number between 3000-8000 in increments of 100
+            return this.getRandomIntInRange(100, 200) * 100; // Random number between 3000-8000 in increments of 100
         } else if (this.seniorityLevel === 'Junior') {
-            return this.getRandomIntInRange(20, 40) * 100; // Random number between 2000-4000 in increments of 100
+            return this.getRandomIntInRange(70, 150) * 100; // Random number between 2000-4000 in increments of 100
         } else if (this.seniorityLevel === 'Trainee') {
-            return this.getRandomIntInRange(10, 25) * 100; // Random number between 1000-2500 in increments of 100
+            return this.getRandomIntInRange(50, 100) * 100; // Random number between 1000-2500 in increments of 100
         } else {
             return 0; // Default value if seniority level is not specified or invalid
         }

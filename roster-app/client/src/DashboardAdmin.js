@@ -14,6 +14,7 @@ const DashboardAdmin = () => {
     const [destinationCity, setDestination] = useState('');
     const [searchResults, setSearchResults] = useState([]);
     const [searchMode, setSearchMode] = useState('flightNumber'); // 'flightNumber' or 'filter'
+    const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
 
     const handleSearch = async (event) => {
@@ -22,6 +23,7 @@ const DashboardAdmin = () => {
         const flight_num = flightNumber.toUpperCase();
         const dep_airport_code = departureAirport.toUpperCase();
         const dest_airport_code = destinationAirport.toUpperCase();
+        console.log('Flight_num:', flight_num);
 
         try {
             const response = await axios.get('http://localhost:5001/flight-info/find_flight_information', {
@@ -34,7 +36,15 @@ const DashboardAdmin = () => {
                     destination_city: destinationCity
                 }
             });
-            setSearchResults(response.data);
+            console.log('Response:', response.data);
+
+            const flights = response.data.map(flight => ({
+                ...flight,
+                rosterGenerated: flight.rosterGenerated || false // Ensure rosterGenerated is set
+            }));
+
+            console.log('Processed Flights:', flights);
+            setSearchResults(flights);
             setFlightNumber('');
             setDay('');
             setMonth('');
@@ -49,12 +59,23 @@ const DashboardAdmin = () => {
         }
     };
 
-    const handleGenerateRoster = (flight) => {
-        navigate('/viewFlight', {
-            state: {
-                flightDetails: flight
-            }
-        });
+    const handleGenerateRoster = async (flight) => {
+        setLoading(true); // Set loading to true when generating roster
+        try {
+            const response = await axios.post('http://localhost:5001/main-system/generate-flight-roster', {
+                flight_info: flight,
+            });
+            console.log(response.data);
+            setLoading(false); // Set loading to false when done
+            navigate('/viewFlight', {
+                state: {
+                    flightDetails: flight
+                }
+            });
+        } catch (error) {
+            console.error('Error generating roster:', error);
+            setLoading(false); // Set loading to false even if there is an error
+        }
     };
 
     const handleViewRoster = (flight) => {
@@ -69,10 +90,14 @@ const DashboardAdmin = () => {
         localStorage.removeItem('token');
         navigate('/login');
     };
-    
 
     return (
         <div className='dashboard-page'>
+            {loading && (
+                <div className='loading-screen'>
+                    <p>Loading...</p>
+                </div>
+            )}
             <nav className='dashboard-navbar'>
                 <Link to="/dashboard">
                     <img src="./logowhite.png" alt="Logo" className="logo" />
@@ -82,7 +107,6 @@ const DashboardAdmin = () => {
                 <Link to="/settings" className='nav-item'>Settings</Link>
             </nav>
             <div className='dashboard-header'>
-                
                 <p>Welcome Admin! Select a flight below.</p>
             </div>
             <div className="search-toggle">
@@ -94,7 +118,7 @@ const DashboardAdmin = () => {
                 </button>
             </div>
             <div className='dashboard-menu'>
-                <form classname='searchform' onSubmit={handleSearch}>
+                <form className='searchform' onSubmit={handleSearch}>
                     <div className='input_container'>
                         {searchMode === 'flightNumber' && (
                             <div className='dashboard-menu-item'>
@@ -198,8 +222,18 @@ const DashboardAdmin = () => {
                                         <p><strong>Destination Airport:</strong> {flight.destination_airport_code}</p>
                                     </div>
                                     <div className='result-buttons'>
-                                        <button onClick={() => handleGenerateRoster(flight)}>Generate Roster</button>
-                                        <button onClick={() => handleViewRoster(flight)}>View Roster</button>
+                                        <button
+                                            onClick={() => handleGenerateRoster(flight)}
+                                            disabled={flight.rosterGenerated}
+                                        >
+                                            Generate Roster
+                                        </button>
+                                        <button
+                                            onClick={() => handleViewRoster(flight)}
+                                            disabled={!flight.rosterGenerated}
+                                        >
+                                            View Roster
+                                        </button>
                                     </div>
                                 </li>
                             ))}

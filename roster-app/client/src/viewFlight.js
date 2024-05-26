@@ -13,10 +13,7 @@ const ViewFlight = () => {
     const [flightRoster, setFlightRoster] = useState(null); // State for flight_roster
     const [currentView, setCurrentView] = useState('plane'); // Default view is 'plane'
 
-    console.log('Flight details:', flightDetails);
-//
-//
-//
+
     useEffect(() => {
         if (flightDetails) {
             setFlight(flightDetails);
@@ -73,16 +70,14 @@ const ViewFlight = () => {
                 </div>
 
                 {flight && currentView === 'plane' && flightRoster && (
-                    console.log('Flight Roster:', flightRoster),
                     <>
-                        <p><strong>Menu:</strong> {flightRoster.menu.join(', ')}</p>
+                        <p><strong>Menu:</strong> {flight.flight_menu.join(', ')}</p>
                         <SeatMap flightRoster={flightRoster} />
                     </>
                 )}
 
                 {flight && currentView === 'tabular' && (
                     <>
-                        {/* Tabular View Component */}
                         <TabularView flightRoster={flightRoster} />
                     </>
                 )}

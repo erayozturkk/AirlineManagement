@@ -13,8 +13,77 @@ module.exports = function createFlightCrewInfoRouter(supabaseKey) {
 
 
 
+  // Utility function to capitalize the first letter of each word
+  function capitalizeNames(names) {
+    for (let i = 0; i < names.length; i++) {
+      if (names[i]) {
+        names[i] = capitalizeName(names[i])
+      }
+    }
+  }
+  function capitalizeName(name) {
+    return name
+      .split(' ')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(' ');
+  }
+  function capitalizeInput(input) {
+    if (input & typeof input === 'string') {
+      return capitalizeName(input);
+    } else if (Array.isArray(input)) {
+      return capitalizeNames(input);
+    } else {
+      throw new Error("Input must be a string or an array of strings");
+    }
+  }
+
+
+
   router.post('/add-crew-member', async (req, res) => {
     try {
+
+
+      // Extract parameters from the request query with fallback values
+      let {
+        name,
+        age,
+        gender,
+        nationality,
+        languages,
+        seniorityLevel,
+        vehiclerestriction,
+        allowedRange
+      } = req.query;
+
+
+      // Get aircrafts list
+      const { data: aircraftData, error: aircraftError } = await supabase
+        .from('aircrafts')
+        .select('vehicletype');
+
+      if (aircraftError) {
+        throw aircraftError;
+      }
+      const aircrafts = aircraftData.map(aircraft => aircraft.vehicletype);
+
+
+      const validPilotTypes = ["Senior", "Junior", "Trainee"];
+      // Input checks 
+      if (seniorityLevel && !validPilotTypes.includes(seniorityLevel)) {
+        return res.status(400).json({ error: `Invalid attendanttype provided: ${seniorityLevel}`, validPilotTypes: validPilotTypes });
+      }
+      if (allowedRange && (allowedRange < 1000 || isNaN(allowedRange))) {
+        return res.status(400).json({ error: `Invalid allowedRange provided allowedRange: ${allowedRange}` });
+      }
+
+      if (vehiclerestriction && !aircrafts.includes(vehiclerestriction)) {
+        return res.status(400).json({ error: `Invalid vehiclerestriction provided: ${vehiclerestriction}`, validAircrafts: aircrafts });
+      }
+      if (age && ((age < 18) || isNaN(age))) {
+        return res.status(400).json({ error: 'Age must be an integer less than 18', age: age });
+      }
+
+
       // Get the last id from the database
       const { data: lastCrewMember, error: lastCrewMemberError } = await supabase
         .from('people')
@@ -29,17 +98,15 @@ module.exports = function createFlightCrewInfoRouter(supabaseKey) {
 
       // Calculate the next available id
       const nextId = lastCrewMember ? lastCrewMember.id + 1 : 1;
-
-      // Extract parameters from the request query with fallback values
-      const {
-        name = '',
-        age = 0,
-        gender = '',
-        nationality = '',
-        languages = [],
-        seniorityLevel = '',
-        vehiclerestriction = ''
-      } = req.query;
+      //Convert the strings to capital
+      const arr = [name, gender, nationality];
+      capitalizeInput(arr)
+      name = arr[0];
+      gender = arr[1];
+      nationality = arr[2];
+      if (languages) {
+        capitalizeInput(languages)
+      }
 
       // Create a new random crew member object and set the next available id
       const newCrewMember = Pilot.generateRandom();
@@ -48,9 +115,10 @@ module.exports = function createFlightCrewInfoRouter(supabaseKey) {
       newCrewMember.age = age || newCrewMember.age;
       newCrewMember.gender = gender || newCrewMember.gender;
       newCrewMember.nationality = nationality || newCrewMember.nationality;
-      newCrewMember.languages = languages.length ? languages : newCrewMember.languages;
+      if (languages !== undefined) newCrewMember.languages = languages;
       newCrewMember.seniorityLevel = seniorityLevel || newCrewMember.seniorityLevel;
-      if (seniorityLevel) {
+      newCrewMember.allowedRange = allowedRange || newCrewMember.allowedRange;
+      if (seniorityLevel && !allowedRange) {
         newCrewMember.allowedRange = newCrewMember.calculateMaxAllowedRange();
       }
       newCrewMember.vehicleRestriction = vehiclerestriction || newCrewMember.vehicleRestriction;
@@ -75,7 +143,28 @@ module.exports = function createFlightCrewInfoRouter(supabaseKey) {
 
   router.post('/add-many-crew-member', async (req, res) => {
     try {
-      let { limit } = req.query;
+      let { limit, vehiclerestriction, seniorityLevel } = req.query;
+      const { data: aircraftData, error: aircraftError } = await supabase
+        .from('aircrafts')
+        .select('vehicletype');
+
+      if (aircraftError) {
+        throw aircraftError;
+      }
+      const aircrafts = aircraftData.map(aircraft => aircraft.vehicletype);
+      const validPilotTypes = ["Senior", "Junior", "Trainee"];
+
+      // Input checks
+      if (limit && (isNaN(limit) || limit < 1)) {
+        return res.status(400).json({ error: `Limit should be a positive integer limit: ${limit}` });
+      }
+      if (seniorityLevel && !validPilotTypes.includes(seniorityLevel)) {
+        return res.status(400).json({ error: `Invalid attendanttype provided: ${seniorityLevel}`, validPilotTypes: validPilotTypes });
+      }
+      if (vehiclerestriction && !aircrafts.includes(vehiclerestriction)) {
+        return res.status(400).json({ error: `Invalid vehiclerestriction provided: ${vehiclerestriction}`, validAircrafts: aircrafts });
+      }
+
 
       // Set default value for limit if not specified
       if (!limit || isNaN(limit)) {
@@ -103,6 +192,12 @@ module.exports = function createFlightCrewInfoRouter(supabaseKey) {
       for (let i = 0; i < limitNumber; i++) {
         const newCrewMember = Pilot.generateRandom();
         newCrewMember.id = nextId + i; // Increment the id for each new pilot
+        if (seniorityLevel) {
+          newCrewMember.seniorityLevel = seniorityLevel;
+        }
+        if (vehiclerestriction) {
+          newCrewMember.vehicleRestriction = vehiclerestriction;
+        }
         newCrewMembers.push(newCrewMember);
       }
 
@@ -127,6 +222,10 @@ module.exports = function createFlightCrewInfoRouter(supabaseKey) {
     try {
       // Extract the limit parameter from the query string
       const { limit } = req.query;
+
+      if (limit && (isNaN(limit) || limit < 1)) {
+        return res.status(400).json({ error: `Limit should be a positive integer limit: ${limit}` });
+      }
       const limitNumber = limit ? parseInt(limit) : 10; // Default limit is 10 if not provided
 
       // Construct the query
@@ -185,6 +284,32 @@ module.exports = function createFlightCrewInfoRouter(supabaseKey) {
     try {
       // Extract parameters from the query string
       const { id, seniorityLevel, vehicleRestriction, allowedRange, limit } = req.query;
+
+      const { data: aircraftData, error: aircraftError } = await supabase
+        .from('aircrafts')
+        .select('vehicletype');
+
+      if (aircraftError) {
+        throw aircraftError;
+      }
+      const aircrafts = aircraftData.map(aircraft => aircraft.vehicletype);
+      const validPilotTypes = ["Senior", "Junior", "Trainee"];
+      // Input checks
+      if (allowedRange && isNaN(allowedRange)) {
+        return res.status(400).json({ error: `allowedRange should be an integer allowedRange: ${allowedRange}` });
+      }
+      if (id && isNaN(id)) {
+        return res.status(400).json({ error: `id should be an integer id: ${id}` });
+      }
+      if (limit && (isNaN(limit) || limit < 1)) {
+        return res.status(400).json({ error: `Limit should be a positive integer limit: ${limit}` });
+      }
+      if (seniorityLevel && !validPilotTypes.includes(seniorityLevel)) {
+        return res.status(400).json({ error: `Invalid attendanttype provided: ${seniorityLevel}`, validPilotTypes: validPilotTypes });
+      }
+      if (vehicleRestriction && !aircrafts.includes(vehicleRestriction)) {
+        return res.status(400).json({ error: `Invalid vehiclerestriction provided: ${vehicleRestriction}`, validAircrafts: aircrafts });
+      }
       const limitNumber = limit ? parseInt(limit) : undefined;
       const idNumber = id ? parseInt(id) : undefined;
 
@@ -227,58 +352,6 @@ module.exports = function createFlightCrewInfoRouter(supabaseKey) {
       res.status(500).json({ error: 'Internal server error' });
     }
   });
-
-
-
-
-
-  router.get('/combined-crew-members', async (req, res) => {
-    try {
-      const { vehicleRestriction, allowedRange } = req.query;
-
-      const randomValue = Math.floor(Math.random() * 3);
-      const params1 = { seniorityLevel: "Senior", vehicleRestriction, allowedRange, limit: 1 };
-      const params2 = { seniorityLevel: "Junior", vehicleRestriction, allowedRange, limit: 1 };
-      const params3 = { seniorityLevel: "Trainee", vehicleRestriction, allowedRange, limit: randomValue };
-
-      const baseURL = 'http://localhost:5001/flight-crew/find-crew-members';
-
-      let combinedCrewMembers = []; // Declare combinedCrewMembers outside the blocks
-
-      if (randomValue > 0) {
-        const [response1, response2, response3] = await Promise.all([
-          axios.get(baseURL, { params: params1 }),
-          axios.get(baseURL, { params: params2 }),
-          axios.get(baseURL, { params: params3 })
-        ]);
-        combinedCrewMembers = [
-          ...response1.data.map(member => member.id),
-          ...response2.data.map(member => member.id),
-          ...response3.data.map(member => member.id)
-        ];
-      } else {
-        const [response1, response2] = await Promise.all([
-          axios.get(baseURL, { params: params1 }),
-          axios.get(baseURL, { params: params2 })
-        ]);
-        combinedCrewMembers = [
-          ...response1.data.map(member => member.id),
-          ...response2.data.map(member => member.id)
-        ];
-      }
-
-      res.json(combinedCrewMembers);
-    } catch (error) {
-      console.error('Error combining crew members:', error.message);
-      res.status(500).json({ error: 'Internal server error' });
-    }
-  });
-
-
-
-
-
-
 
   return router;
 }

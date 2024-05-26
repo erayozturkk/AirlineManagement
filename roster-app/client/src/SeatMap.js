@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import './SeatMap.css';
+
 const SeatMap = ({ flightRoster }) => {
+    console.log('Flight Roster Seat Map:', flightRoster)
     const [seatingPlan, setSeatingPlan] = useState(null);
     const [aircraftInfo, setAircraftInfo] = useState(null);
     const vehicleType = flightRoster?.vtype; // Ensure flightRoster is not null
@@ -16,8 +18,7 @@ const SeatMap = ({ flightRoster }) => {
                 });
                 console.log('Response:', response.data[0]);
                 setAircraftInfo(response.data[0]);
-                setSeatingPlan(response.data[0].seatingplan)
-
+                setSeatingPlan(response.data[0].seatingplan);
             } catch (error) {
                 console.error('Error fetching aircraft info:', error);
             }
@@ -25,7 +26,7 @@ const SeatMap = ({ flightRoster }) => {
 
         if (vehicleType) {
             fetchAircraftInfo(vehicleType);
-            console.log('Aircraft: ', aircraftInfo, 'SeatingPlan:', seatingPlan)
+            console.log('Aircraft: ', aircraftInfo, 'SeatingPlan:', seatingPlan);
         }
     }, [vehicleType]); // Only re-run the effect if vehicleType changes
 
@@ -33,9 +34,8 @@ const SeatMap = ({ flightRoster }) => {
         <div className="seat-map-container">
             {seatingPlan ? (
                 <>
-
-                    <SeatingSection classType="Business" seatingPlan={seatingPlan.business} startRow={0} />
-                    <SeatingSection classType="Economy" seatingPlan={seatingPlan.economy} startRow={seatingPlan.business.rows} />
+                    <SeatingSection classType="Business" seatingPlan={seatingPlan.business} startRow={0} passengers={flightRoster.passengers} />
+                    <SeatingSection classType="Economy" seatingPlan={seatingPlan.economy} startRow={seatingPlan.business.rows} passengers={flightRoster.passengers} />
                 </>
             ) : (
                 <p>Loading seating plan...</p>
@@ -44,14 +44,15 @@ const SeatMap = ({ flightRoster }) => {
     );
 };
 
-
-
-
-const SeatingSection = ({ classType, seatingPlan, startRow }) => {
+const SeatingSection = ({ classType, seatingPlan, startRow, passengers }) => {
     const { rows, layout } = seatingPlan;
     const layoutArr = layout.split('-').map(Number);
 
     let currentRow = startRow;
+
+    const getPassengerForSeat = (seatId) => {
+        return passengers.find(passenger => passenger.seatnumber === seatId);
+    };
 
     return (
         <div className={`seating-section ${classType.toLowerCase()}`}>
@@ -65,10 +66,16 @@ const SeatingSection = ({ classType, seatingPlan, startRow }) => {
                         {layoutArr.map((seats, layoutIndex) => (
                             <div key={layoutIndex} className="seat-block">
                                 {Array.from({ length: seats }).map((_, seatIndex) => {
-                                    const seatId = `${String.fromCharCode(65 + letterIndex)}${rowNumber}`;
+                                    const seatId = `${rowNumber}${String.fromCharCode(65 + letterIndex)}`;
                                     letterIndex++;
+                                    const passenger = getPassengerForSeat(seatId);
                                     return (
-                                        <div key={seatIndex} id={seatId} className="seat">
+                                        <div
+                                            key={seatIndex}
+                                            id={seatId}
+                                            className={`seat ${passenger ? 'occupied' : ''}`}
+                                            title={passenger ? `${passenger.name}, ${passenger.age}, ${passenger.gender}` : ''}
+                                        >
                                             {seatId}
                                         </div>
                                     );
@@ -84,4 +91,5 @@ const SeatingSection = ({ classType, seatingPlan, startRow }) => {
         </div>
     );
 };
+
 export default SeatMap;

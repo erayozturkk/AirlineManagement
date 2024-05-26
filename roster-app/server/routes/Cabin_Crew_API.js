@@ -1,4 +1,5 @@
-const { CabinCrew, commonLanguages, recipes, aircrafts } = require('./CabinCrew')
+
+const { CabinCrew, commonLanguages, recipes } = require('./CabinCrew')
 
 const express = require('express');
 const router = express.Router();
@@ -13,9 +14,77 @@ module.exports = function createCabinCrewInfoRouter(supabaseKey) {
   const supabaseUrl = "https://hsixajfgpamanbqvxyyw.supabase.co";
   const supabase = createClient(supabaseUrl, supabaseKey);
 
+
+
+
+  // Utility function to capitalize the first letter of each word
+  function capitalizeNames(names) {
+    for (let i = 0; i < names.length; i++) {
+      if (names[i]) {
+        names[i] = capitalizeName(names[i])
+      }
+    }
+  }
+  function capitalizeName(name) {
+    return name
+      .split(' ')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(' ');
+  }
+  function capitalizeInput(input) {
+    if (input & typeof input === 'string') {
+      return capitalizeName(input);
+    } else if (Array.isArray(input)) {
+      return capitalizeNames(input);
+    } else {
+      throw new Error("Input must be a string or an array of strings");
+    }
+  }
+
   // POST route to add a new crew member
   router.post('/add-crew-member', async (req, res) => {
     try {
+      // Extract parameters from the request query
+      let { name, age, gender, nationality, languages, attendanttype, vehiclerestriction } = req.query;
+
+      // Get aircrafts list
+      const { data: aircraftData, error: aircraftError } = await supabase
+        .from('aircrafts')
+        .select('vehicletype');
+
+      if (aircraftError) {
+        throw aircraftError;
+      }
+      const aircrafts = aircraftData.map(aircraft => aircraft.vehicletype);
+
+      const validAttendantTypes = ["chief", "regular", "chef"];
+      // Input checks 
+      if (attendanttype && !validAttendantTypes.includes(attendanttype)) {
+        return res.status(400).json({ error: `Invalid attendanttype provided: ${attendanttype}`, validAttendantTypes: validAttendantTypes });
+      }
+      if (vehiclerestriction) {
+        if (!Array.isArray(vehiclerestriction)) {
+          return res.status(400).json({ error: 'vehiclerestriction must be an array' });
+        }
+        for (const restriction of vehiclerestriction) {
+          if (!aircrafts.includes(restriction)) {
+            return res.status(400).json({ error: `Invalid vehiclerestriction provided: ${restriction}`, validAircrafts: aircrafts });
+          }
+        }
+      }
+      if (age && ((age < 18) || isNaN(age))) {
+        return res.status(400).json({ error: 'Age must be an integer less than 18', age: age });
+      }
+      const arr = [name, gender, nationality];
+      capitalizeInput(arr)
+      name = arr[0];
+      gender = arr[1];
+      nationality = arr[2];
+      if (languages) {
+        capitalizeInput(languages)
+      }
+
+
       // Get the last id from the database
       const { data: lastCrewMember, error: lastCrewMemberError } = await supabase
         .from('people')
@@ -27,11 +96,16 @@ module.exports = function createCabinCrewInfoRouter(supabaseKey) {
         throw lastCrewMemberError;
       }
 
+
+
+
       // Calculate the next available id
       const nextId = lastCrewMember.length > 0 ? lastCrewMember[0].id + 1 : 1;
 
-      // Extract parameters from the request query
-      const { name, age, gender, nationality, languages, attendanttype, vehiclerestriction } = req.query;
+
+
+
+
 
       // Create a new random crew member object and set the next available id
       const newCrewMember = CabinCrew.generateRandom();
@@ -64,7 +138,38 @@ module.exports = function createCabinCrewInfoRouter(supabaseKey) {
 
   router.post('/add-many-crew-member', async (req, res) => {
     try {
-      let { limit } = req.query;
+
+      // Get the queried inputs
+      let { limit, vehiclerestriction, attendanttype } = req.query;
+      // Get aircrafts
+      const { data: aircraftData, error: aircraftError } = await supabase
+        .from('aircrafts')
+        .select('vehicletype');
+
+      if (aircraftError) {
+        throw aircraftError;
+      }
+      const aircrafts = aircraftData.map(aircraft => aircraft.vehicletype);
+      const validAttendantTypes = ["chief", "regular", "chef"];
+
+      // Input checks
+      if (limit && (isNaN(limit) || limit < 1)) {
+        return res.status(400).json({ error: `Limit should be a positive integer limit: ${limit}` });
+      }
+      if (attendanttype && !validAttendantTypes.includes(attendanttype)) {
+        return res.status(400).json({ error: `Invalid attendanttype provided: ${attendanttype}`, validAttendantTypes: validAttendantTypes });
+      }
+      if (vehiclerestriction) {
+        if (!Array.isArray(vehiclerestriction)) {
+          return res.status(400).json({ error: 'vehiclerestriction must be an array' });
+        }
+        for (const restriction of vehiclerestriction) {
+          if (!aircrafts.includes(restriction)) {
+            return res.status(400).json({ error: `Invalid vehiclerestriction provided: ${restriction}`, validAircrafts: aircrafts });
+          }
+        }
+      }
+
 
       // Set default value for limit if not specified
       if (!limit || isNaN(limit)) {
@@ -72,7 +177,7 @@ module.exports = function createCabinCrewInfoRouter(supabaseKey) {
       }
 
       const limitNumber = parseInt(limit);
-
+      // Get last id 
       const { data: lastCrewMember, error: lastCrewMemberError } = await supabase
         .from('people')
         .select('id')
@@ -98,6 +203,12 @@ module.exports = function createCabinCrewInfoRouter(supabaseKey) {
       for (let i = 0; i < limitNumber; i++) {
         const newCrewMember = CabinCrew.generateRandom();
         newCrewMember.id = uId + i; // Increment the id for each new cabin crew member
+        if (vehiclerestriction) {
+          newCrewMember.setVehiclerestriction(vehiclerestriction);
+        }
+        if (attendanttype) {
+          newCrewMember.setAttendanttype(attendanttype)
+        }
         newCrewMembers.push(newCrewMember);
       }
 
@@ -127,6 +238,10 @@ module.exports = function createCabinCrewInfoRouter(supabaseKey) {
       // Extract the limit parameter from the query string
       const { limit } = req.query;
 
+      if (limit && (isNaN(limit) || limit < 1)) {
+        return res.status(400).json({ error: `Limit should be a positive integer limit: ${limit}` });
+      }
+
       // Convert the limit parameter to a number
       const limitNumber = limit ? parseInt(limit) : 10; // Default limit is 10 if not provided
 
@@ -152,6 +267,7 @@ module.exports = function createCabinCrewInfoRouter(supabaseKey) {
     try {
       // Extract the ids parameter from the query string and parse it into an array of integers
       const { ids } = req.query;
+
       if (!ids) {
         return res.status(400).json({ error: 'No ids provided' });
       }
@@ -186,28 +302,64 @@ module.exports = function createCabinCrewInfoRouter(supabaseKey) {
   router.get('/find-crew-members', async (req, res) => {
     try {
       // Extract parameters from the query string
-      const { id, attendanttype, vehiclerestriction, limit } = req.query;
-      const limitNumber = limit ? parseInt(limit) : undefined;
-      const idNumber = id ? parseInt(id) : undefined;
-      if (limitNumber === 0) {
-        err2 = Error("Limit cannot be 0");
-        throw (err2);
+      let { id, name, gender, nationality, attendanttype, vehiclerestriction, limit } = req.query;
+      // Get aircrafts
+      const { data: aircraftData, error: aircraftError } = await supabase
+        .from('aircrafts')
+        .select('vehicletype');
+
+      if (aircraftError) {
+        throw aircraftError;
       }
 
+      const aircrafts = aircraftData.map(aircraft => aircraft.vehicletype);
+      const validAttendantTypes = ["chief", "regular", "chef"];
+      // Input checks
+      if (id && isNaN(id)) {
+        return res.status(400).json({ error: `id should be an integer id: ${id}` });
+      }
+      if (limit && (isNaN(limit) || limit < 1)) {
+        return res.status(400).json({ error: `Limit should be a positive integer limit: ${limit}` });
+      }
+      if (attendanttype && !validAttendantTypes.includes(attendanttype)) {
+        return res.status(400).json({ error: `Invalid attendanttype provided: ${attendanttype}`, validAttendantTypes: validAttendantTypes });
+      }
+      if (vehiclerestriction) {
+        if (!Array.isArray(vehiclerestriction)) {
+          return res.status(400).json({ error: 'vehiclerestriction must be an array' });
+        }
+        for (const restriction of vehiclerestriction) {
+          if (!aircrafts.includes(restriction)) {
+            return res.status(400).json({ error: `Invalid vehiclerestriction provided: ${restriction}`, validAircrafts: aircrafts });
+          }
+        }
+      }
+
+      //Convert strings to first letter upper
+      const arr = [name, gender, nationality];
+      capitalizeInput(arr)
+      name = arr[0];
+      gender = arr[1];
+      nationality = arr[2];
+
+      const limitNumber = limit ? parseInt(limit) : undefined;
+      const idNumber = id ? parseInt(id) : undefined;
 
       // Construct the query
       let query = supabase.from('cabin_crew').select('*').order('id', { ascending: true });
 
-      if (idNumber) {
-        query = query.eq('id', idNumber);
-      } else {
-        if (attendanttype) {
-          query = query.eq('attendanttype', attendanttype);
+      const queryParams = { id: idNumber, name, gender, nationality, attendanttype, vehiclerestriction };
+
+      // Build the query dynamically
+      Object.keys(queryParams).forEach(key => {
+        if (queryParams[key]) {
+          if (key === 'vehiclerestriction') {
+            query = query.contains(key, [queryParams[key]]);
+          } else {
+            query = query.eq(key, queryParams[key]);
+          }
         }
-        if (vehiclerestriction) {
-          query = query.contains('vehiclerestriction', [vehiclerestriction]);
-        }
-      }
+      });
 
       // Execute the query
       const { data: crewMembers, error } = await query;
@@ -216,6 +368,7 @@ module.exports = function createCabinCrewInfoRouter(supabaseKey) {
       if (error) {
         throw error;
       }
+
       // If limit is specified, select a random subset of the results
       if (limitNumber && crewMembers.length > limitNumber) {
         const shuffled = crewMembers.sort(() => 0.5 - Math.random());
@@ -229,53 +382,6 @@ module.exports = function createCabinCrewInfoRouter(supabaseKey) {
       res.status(500).json({ error: 'Internal server error' });
     }
   });
-
-  router.get('/combined-crew-members', async (req, res) => {
-    try {
-      const { vehiclerestriction } = req.query;
-
-      const randomValue = Math.floor(Math.random() * 3);
-      const randomValue1to4 = Math.floor(Math.random() * 4) + 1;
-      const randomValue4to16 = Math.floor(Math.random() * 13) + 4;
-      const params1 = { attendanttype: "chief", vehiclerestriction, limit: randomValue1to4 };
-      const params2 = { attendanttype: "regular", vehiclerestriction, limit: randomValue4to16 };
-      const params3 = { attendanttype: "chef", vehiclerestriction, limit: randomValue };
-
-      const baseURL = 'http://localhost:5001/cabin-crew/find-crew-members';
-
-      let combinedCrewMemberIds = []; // Declare combinedCrewMemberIds outside the blocks
-
-      if (randomValue > 0) {
-        const [response1, response2, response3] = await Promise.all([
-          axios.get(baseURL, { params: params1 }),
-          axios.get(baseURL, { params: params2 }),
-          axios.get(baseURL, { params: params3 })
-        ]);
-        combinedCrewMemberIds = [
-          ...response1.data.map(member => member.id),
-          ...response2.data.map(member => member.id),
-          ...response3.data.map(member => member.id)
-        ];
-      } else {
-        const [response1, response2] = await Promise.all([
-          axios.get(baseURL, { params: params1 }),
-          axios.get(baseURL, { params: params2 })
-        ]);
-        combinedCrewMemberIds = [
-          ...response1.data.map(member => member.id),
-          ...response2.data.map(member => member.id)
-        ];
-      }
-
-      res.json(combinedCrewMemberIds);
-    } catch (error) {
-      console.error('Error combining cabin crew member IDs:', error.message);
-      res.status(500).json({ error: 'Internal server error' });
-    }
-  });
-
-
-
 
   return router;
 };

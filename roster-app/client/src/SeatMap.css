@@ -42,3 +42,41 @@
     align-items: center;
     justify-content: center;
 }
+
+/* General seat styling */
+.seat {
+    width: 40px;
+    height: 40px;
+    margin: 5px;
+    background-color: #83ff17;
+    /* Default seat color */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+}
+
+/* Occupied seat styling */
+.seat.occupied {
+    background-color: red;
+    /* Color for occupied seats */
+}
+
+/* Tooltip styling */
+.seat[title] {
+    position: relative;
+    cursor: pointer;
+}
+
+.seat[title]:hover::after {
+    content: attr(title);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: black;
+    color: white;
+    padding: 5px;
+    border-radius: 3px;
+    white-space: nowrap;
+}

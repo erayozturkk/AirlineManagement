@@ -15,38 +15,20 @@ module.exports = function createFlightInfoRouter(supabaseKey) {
     try {
       const {
         flight_num,
-        date,
-        time,
-        origin_country,
         origin_city,
-        origin_airport_name,
         origin_airport_code,
-        destination_country,
-        destination_city,
-        vehicle_type,
-        destination_airport_name,
         destination_airport_code,
-        shared_flight_number,
-        shared_flight_company
+        destination_city
       } = req.query;
 
       let query = supabase.from('flight_info').select('*');
 
       const queryParams = {
         flight_num,
-        date,
-        time,
-        origin_country,
         origin_city,
-        origin_airport_name,
         origin_airport_code,
-        destination_country,
-        destination_city,
-        vehicle_type,
-        destination_airport_name,
         destination_airport_code,
-        shared_flight_number,
-        shared_flight_company
+        destination_city
       };
 
       Object.keys(queryParams).forEach(key => {
@@ -62,7 +44,22 @@ module.exports = function createFlightInfoRouter(supabaseKey) {
         return res.status(500).json({ error: 'Internal server error' });
       }
 
-      res.json(data);
+      // Check if a roster is already generated for each flight
+      const flightInfoWithRosterStatus = await Promise.all(data.map(async (flight) => {
+        const { data: rosterData, error: rosterError } = await supabase
+          .from('flightrosters')
+          .select('rosterid')
+          .eq('flightnum', flight.flight_num);
+
+        if (rosterError) {
+          console.error('Error fetching flight roster:', rosterError.message);
+          return { ...flight, rosterGenerated: false };
+        }
+
+        return { ...flight, rosterGenerated: rosterData.length > 0 };
+      }));
+
+      res.json(flightInfoWithRosterStatus);
     } catch (error) {
       console.error('Error fetching flight information:', error.message);
       res.status(500).json({ error: 'Internal server error' });
@@ -86,14 +83,29 @@ module.exports = function createFlightInfoRouter(supabaseKey) {
         limit
       } = req.query;
 
+      // Input checks
+      if (limit && (isNaN(limit) || limit < 1)) {
+        return res.status(400).json({ error: `Limit should be a positive integer limit: ${limit}` });
+      }
+      if (flight_num && !(flight_num.substring(0, 2).toUpperCase() === "TK")) {
+        return res.status(400).json({ error: `The flight_num should start with TK: ${flight_num}` });
+      }
+      if (flight_num && isNaN(flight_num.substring(3))) {
+        return res.status(400).json({ error: `The flight_num should continue with digits after first two chars: ${flight_num}` });
+      }
+      if (flight_num && flight_num.length != 6) {
+        return res.status(400).json({ error: `The flight_num should continue with 4 digits after first two chars: ${flight_num}` });
+      }
       let limitNumber;
       if (limit) {
         limitNumber = parseInt(limit);
       }
       else {
-        limitNumber = 5;
+        limitNumber = 1;
       }
+
       const addedFlights = [];
+      var shouldchange = false;
       for (let i = 0; i < limitNumber; i++) {
 
 
@@ -120,7 +132,12 @@ module.exports = function createFlightInfoRouter(supabaseKey) {
         //ganerate random date if not provided in request
         let toinDate;
         if (date) {
-          toinDate = date;
+          if (!shouldchange) {
+            toinDate = date;
+          }
+          else {
+            toinDate = generateRandomDate();
+          }
         }
         else {
           toinDate = generateRandomDate();
@@ -136,21 +153,6 @@ module.exports = function createFlightInfoRouter(supabaseKey) {
           toinTime = generateRandomTime();
         }
 
-
-        //ganerate random duration if not provided in request
-        let toinDuration;
-        if (duration) {
-          toinDuration = duration;
-        }
-        else {
-          // Generate a random distance between 800 and 8000
-          const distance = Math.floor(Math.random() * (8000 - 800 + 1)) + 800;
-          // Generate a random duration based on the distance theese values are expected speeds of a passanger plane
-          const distanceFactor = Math.floor(Math.random() * (575 - 480 + 1)) + 480;
-          toinDuration = Math.ceil(distance / distanceFactor) * 60;
-
-        }
-
         let toinDistance;
         if (distance) {
           toinDistance = distance;
@@ -159,6 +161,19 @@ module.exports = function createFlightInfoRouter(supabaseKey) {
           // Generate a random distance between 800 and 8000
           toinDistance = Math.floor(Math.random() * (8000 - 800 + 1)) + 800;
         }
+        //ganerate random duration if not provided in request
+        let toinDuration;
+        if (duration) {
+          toinDuration = duration;
+        }
+        else {
+
+          // Generate a random duration based on the distance theese values are expected speeds of a passanger plane
+          const distanceFactor = Math.floor(Math.random() * (575 - 480 + 1)) + 480;
+          toinDuration = Math.ceil(toinDistance / distanceFactor) * 60;
+        }
+
+
 
 
         //ganerate random airport if not provided in request
@@ -174,7 +189,7 @@ module.exports = function createFlightInfoRouter(supabaseKey) {
         if (origin_airport_name) {
           const matchedAirport = airports.find(airport => airport['Airport Name'] === origin_airport_name);
           if (!matchedAirport) {
-            throw new Error(`Origin airport "${origin_airport_name}" not found in the database.`);
+            return res.status(400).json({ error: `Origin airport "${origin_airport_name}" not found in the database.` });
           }
           else {
             toinOriginairport = matchedAirport;
@@ -186,11 +201,11 @@ module.exports = function createFlightInfoRouter(supabaseKey) {
         if (destination_airport_name) {
           const matchedAirport = airports.find(airport => airport['Airport Name'] === destination_airport_name);
           if (!matchedAirport) {
-            throw new Error(`Origin airport "${destination_airport_name}" not found in the database.`);
+            return res.status(400).json({ error: `Origin airport "${destination_airport_name}" not found in the database.` });
           }
           else {
             if (matchedAirport['Airport Name'] === toinOriginairport['Airport Name']) {
-              throw new Error(`Destination airport can not be same with the origin airport.`);
+              return res.status(400).json({ error: `Destination airport can not be same with the origin airport.` });
             }
             else {
               toinDestinationairport = matchedAirport;
@@ -236,10 +251,10 @@ module.exports = function createFlightInfoRouter(supabaseKey) {
         if (vehicle_type) {
           const matchedVehicle = aircrafts.find(aircrafts => aircrafts['vehicletype'] === vehicle_type);
           if (!matchedVehicle) {
-            throw new Error(`Provided vehicletype "${vehicle_type}" is not in the database`)
+            return res.status(400).json({ error: `Provided vehicletype "${vehicle_type}" is not in the database` })
           }
           else {
-            toinVehicle = matchedVehicle;
+            toinVehicle = vehicle_type;
           }
         }
         else {
@@ -248,11 +263,19 @@ module.exports = function createFlightInfoRouter(supabaseKey) {
         async function checkForUnique(date, time, origin_airport_name, destination_airport_name) {
           try {
             // Convert date to GMT string for consistency
-            const gmtDateString = date.toISOString().split('T')[0];
+            let gmtDateString;
+
+            if (typeof date == "string") {
+              gmtDateString = date;
+
+            }
+            else {
+              gmtDateString = date.toISOString().split('T')[0];
+            }
+
 
             // Format time to ensure consistent format
             const formattedTime = time.padStart(5, '0'); // Ensure time is in HH:MM format
-
             const { data: existingFlights, error: flight_infoError } = await supabase
               .from('flight_info')
               .select('*')
@@ -264,19 +287,29 @@ module.exports = function createFlightInfoRouter(supabaseKey) {
             if (flight_infoError) {
               throw flight_infoError;
             }
-
-            return existingFlights.length === 0;
+            if (existingFlights.length === 0) {
+              return true;
+            }
+            else {
+              return false;
+            }
           } catch (error) {
             console.error('Error checking for unique flights:', error.message);
             return false; // Return false to indicate an error occurred
           }
         }
 
-
-
+        //const toinmenu = toinVehicle.flight_menu
+        const matchedVehicle = aircrafts.find(aircrafts => aircrafts['vehicletype'] === toinVehicle);
 
         // Insert the flight information into the Supabase table
-        if (checkForUnique(toinDate, toinTime, toinOriginairport['Airport Name'], toinDestinationairport['Airport Name'])) {
+        if (await checkForUnique(toinDate, toinTime, toinOriginairport['Airport Name'], toinDestinationairport['Airport Name'])) {
+          shouldchange = false;
+          if (typeof toinDate == "string") {
+          }
+          else {
+            toinDate = toinDate.toISOString().split('T')[0];
+          }
           const newFlightInfo = {
             flight_num: toinFlightNumber,
             date: toinDate,
@@ -293,7 +326,9 @@ module.exports = function createFlightInfoRouter(supabaseKey) {
             vehicle_type: toinVehicle,
             shared_flight_number: toinSharedflightnumber,
             shared_flight_company: toinSharedflightcompany,
-            time: toinTime
+            time: toinTime,
+            flight_menu: matchedVehicle.flight_menu
+
           };
           const { data: insertedFlightInfo, error: insertError } = await supabase
             .from('flight_info')
@@ -306,6 +341,7 @@ module.exports = function createFlightInfoRouter(supabaseKey) {
           addedFlights.push(newFlightInfo);
         }
         else {
+          shouldchange = true;
           i--;
         }
       }
@@ -316,6 +352,32 @@ module.exports = function createFlightInfoRouter(supabaseKey) {
       res.status(500).json({ error: 'Internal server error' });
     }
   });
+
+  router.put('/update-flight-info', async (req, res) => {
+    try {
+      const { flight_infoarray } = req.body; // Expecting an array of flight info objects
+      const updatePromises = flight_infoarray.map(async (flightInfo) => {
+        const { flight_num, rosterGenerated, ...updateData } = flightInfo; // Destructure and exclude rosterGenerated
+        const { data, error } = await supabase
+          .from('flight_info')
+          .update(updateData)
+          .eq('flight_num', flight_num);
+
+        if (error) {
+          throw error;
+        }
+        return data;
+      });
+
+      const results = await Promise.all(updatePromises);
+      res.status(200).json({ message: 'Flight_info updated successfully' });
+    } catch (error) {
+      console.error('Error updating flight information:', error.message);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+
 
 
 
@@ -338,8 +400,8 @@ module.exports = function createFlightInfoRouter(supabaseKey) {
 
   // Helper function to generate a random date between 03-05-2024:00.00 to 03-05-2026:23.59 in UTC format
   function generateRandomDate() {
-    const start = new Date(2024, 4, 3, 0, 0); // 03-05-2024:00.00 UTC
-    const end = new Date(2026, 4, 3, 23, 59); // 03-05-2026:23.59 UTC
+    const start = new Date(2024, 4, 3); // 03-05-2024:00.00 UTC
+    const end = new Date(2026, 4, 3); // 03-05-2026:23.59 UTC
     const randomTime = start.getTime() + Math.random() * (end.getTime() - start.getTime());
     return new Date(randomTime);
   }

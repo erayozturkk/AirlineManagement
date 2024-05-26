@@ -196,6 +196,12 @@ body.dashboard-page {
     background-color: #555;
 }
 
+.result-buttons button:disabled {
+    background-color: #ddd;
+    color: #333;
+    cursor: not-allowed;
+}
+
 .search-toggle {
     display: flex;
     justify-content: center;
@@ -209,12 +215,14 @@ body.dashboard-page {
     cursor: pointer;
 }
 
+
+
 .search-toggle .active {
     background-color: #555;
     color: white;
 }
 
-.search-toggle button  {
+.search-toggle button {
     color: #333;
 }
 
@@ -223,4 +231,20 @@ body.dashboard-page {
     flex-direction: column;
     align-items: center;
     /* Center elements inside the form */
+}
+
+.loading-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: #fff;
+    font-size: 2em;
+    z-index: 1000;
+    /* Ensure it is above other elements */
 }
