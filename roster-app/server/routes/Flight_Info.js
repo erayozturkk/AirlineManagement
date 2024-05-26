@@ -15,6 +15,7 @@ module.exports = function createFlightInfoRouter(supabaseKey) {
     try {
       const {
         flight_num,
+        date,
         origin_city,
         origin_airport_code,
         destination_airport_code,
@@ -25,6 +26,7 @@ module.exports = function createFlightInfoRouter(supabaseKey) {
 
       const queryParams = {
         flight_num,
+        date,
         origin_city,
         origin_airport_code,
         destination_airport_code,

@@ -19,6 +19,10 @@ const DashboardAdmin = () => {
 
     const handleSearch = async (event) => {
         event.preventDefault();
+        if ((year || month || day) && (!year || !month || !day)) {
+            alert("Invalid Date Format, please provide a complete date.");
+            return;
+        }
         const date = (year && month && day) ? `${year}-${day.padStart(2, '0')}-${month.padStart(2, '0')}` : '';
         const flight_num = flightNumber.toUpperCase();
         const dep_airport_code = departureAirport.toUpperCase();
@@ -239,6 +243,13 @@ const DashboardAdmin = () => {
                         </ul>
                     </div>
                 )}
+                {searchResults && searchResults.length === 0 && (
+                    <div>
+                        <h2>No Results</h2>
+                        <p>No flights found.</p>
+                    </div>
+                )
+                }
             </div>
         </div>
     );

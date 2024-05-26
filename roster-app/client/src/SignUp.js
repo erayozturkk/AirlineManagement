@@ -28,6 +28,7 @@ const SignUpPage = () => {
         const specialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
 
         setPasswordValidations({ length, uppercase, specialChar });
+
     };
 
     const handleChange = (e) => {
@@ -54,6 +55,11 @@ const SignUpPage = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        const { length, uppercase, specialChar } = passwordValidations;
+        if (!length || !uppercase || !specialChar) {
+            alert("Password does not meet the requirements. Please ensure it is 8-16 characters long, contains at least one uppercase letter, and one special character.");
+            return;
+        }
         if (password !== confirmPassword) {
             console.error("Passwords don't match!");
             alert("Passwords don't match! Please try again.");

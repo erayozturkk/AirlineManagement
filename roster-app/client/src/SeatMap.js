@@ -74,7 +74,7 @@ const SeatingSection = ({ classType, seatingPlan, startRow, passengers }) => {
                                             key={seatIndex}
                                             id={seatId}
                                             className={`seat ${passenger ? 'occupied' : ''}`}
-                                            title={passenger ? `${passenger.name}, ${passenger.age}, ${passenger.gender}` : ''}
+                                            title={passenger ? `Name: ${passenger.name}, Age: ${passenger.age}, Gender: ${passenger.gender}, ID: ${passenger.id}` : 'Available'}
                                         >
                                             {seatId}
                                         </div>
