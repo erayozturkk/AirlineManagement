@@ -27,7 +27,7 @@ module.exports = function createMainSystemRouter(supabaseKey) {
   router.post('/generate-flight-roster', async (req, res) => {
     try {
       const { flight_num } = req.query; // Use query parameters for GET requests
-
+      
         // Check if a roster for the given flight_num already exists
       let query = supabase.from('flightrosters').select('*').eq('flightnum', flight_num).single();
 
@@ -48,7 +48,7 @@ module.exports = function createMainSystemRouter(supabaseKey) {
         params: { flight_num },
         headers: { 'Content-Type': 'application/json' }
       });
-  
+      
       const flightInfo = flightInfoResponse.data[0];
       const vtype = flightInfo['vehicle_type'];
       const varr = [];
@@ -66,6 +66,7 @@ module.exports = function createMainSystemRouter(supabaseKey) {
       if(aircraftError) {
         throw aircraftError;
       }
+      
       const max_seats = aircrafts[0].numberofseats;
       const seatingPlan = aircrafts[0].seatingplan;
       const LayoutB=seatingPlan["business"].layout;
@@ -86,6 +87,7 @@ module.exports = function createMainSystemRouter(supabaseKey) {
         params: { flightnum: flight_num },
         headers: { 'Content-Type': 'application/json' }
       });
+      
       const passengers = passengersResponse.data;
       const passengerids = passengersResponse.data.map(passenger => passenger.id);
       const occupiedseats = passengersResponse.data
@@ -172,6 +174,7 @@ module.exports = function createMainSystemRouter(supabaseKey) {
         headers: { 'Content-Type': 'application/json' }
         });
       }
+      
        // Fetch the last roster_id
        const { data: lastCrewMember, error: lastCrewMemberError } = await supabase
        .from('flightrosters')
@@ -189,9 +192,17 @@ module.exports = function createMainSystemRouter(supabaseKey) {
       } else {
         nextId = 1;
       }
-
-      // Insert the new flight roster data
       
+      for (let food of flightMenu){
+        flightInfo.flight_menu.push(food);
+      }
+      const flight_infoarray= []
+      flight_infoarray.push(flightInfo);
+      const Updat = await axios.put('http://localhost:5001/flight-info/update-flight-info', 
+        { flight_infoarray }, {
+        headers: { 'Content-Type': 'application/json' }
+        });
+      // Insert the new flight roster data
         const { error: insertError } = await supabase
         .from('flightrosters')
         .insert([
@@ -200,8 +211,7 @@ module.exports = function createMainSystemRouter(supabaseKey) {
             flightnum: flight_num,
             pilotids: flightCrewids,
             cabincrewids: cabinCrewids,
-            passengerids: passengerids,
-            flightmenu: flightMenu
+            passengerids: passengerids
           }
         ]);
 
@@ -549,6 +559,7 @@ async function selectCabinCrew(vehicleRestriction, flightDate, flightTime, fligh
         flightmenu.push(dish);
       }
   }
+
 
   return [selectedCrew,flightmenu];
 }

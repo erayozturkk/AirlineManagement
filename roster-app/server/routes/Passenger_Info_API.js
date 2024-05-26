@@ -137,7 +137,8 @@ module.exports = function createFlightInfoRouter(supabaseKey) {
           limitNumber=5;
         }
         // Input checks 
-        if((limit > 1 )&& seattype){
+       
+        if((limit > 1 )&& seatnumber&& limit){
             return res.status(400).json({ error: `You cant assign more than one passenger to the same seat`});
         }
         const validSeatTypes = ["business", "economy"];

@@ -89,12 +89,19 @@ router.post('/add-flight-info', async (req, res) => {
         shared_flight_company,
         limit
     } = req.query;
+
     // Input checks
     if (limit &&(isNaN(limit) || limit < 1)) {
       return res.status(400).json({ error: `Limit should be a positive integer limit: ${limit}`   });
     }
-    if(!(flight_num.substring(0, 2).toUpperCase() === "TK")){
+    if(flight_num&&!(flight_num.substring(0, 2).toUpperCase() === "TK")){
       return res.status(400).json({ error: `The flight_num should start with TK: ${flight_num}`   });
+    }
+    if(flight_num&& isNaN(flight_num.substring(3))){
+      return res.status(400).json({ error: `The flight_num should continue with digits after first two chars: ${flight_num}`});
+    }
+    if(flight_num&& flight_num.length!= 6){
+      return res.status(400).json({ error: `The flight_num should continue with 4 digits after first two chars: ${flight_num}`});
     }
     let limitNumber;
     if(limit){
@@ -103,6 +110,7 @@ router.post('/add-flight-info', async (req, res) => {
     else{
       limitNumber=1;
     }
+
     const addedFlights = [];
     var shouldchange = false;
       for (let i = 0; i < limitNumber; i++) {
@@ -298,9 +306,9 @@ router.post('/add-flight-info', async (req, res) => {
           }
       }
       
+      //const toinmenu = toinVehicle.flight_menu
+      const matchedVehicle=aircrafts.find(aircrafts=>aircrafts['vehicletype']===toinVehicle);
 
-
-    
         // Insert the flight information into the Supabase table
         if(await checkForUnique(toinDate,toinTime,toinOriginairport['Airport Name'],toinDestinationairport['Airport Name'])){
           shouldchange=false;
@@ -325,7 +333,9 @@ router.post('/add-flight-info', async (req, res) => {
             vehicle_type: toinVehicle,
             shared_flight_number: toinSharedflightnumber,
             shared_flight_company: toinSharedflightcompany,
-            time: toinTime
+            time: toinTime,
+            flight_menu: matchedVehicle.flight_menu
+            
           };
         const { data: insertedFlightInfo, error: insertError } = await supabase
           .from('flight_info')
@@ -350,6 +360,33 @@ router.post('/add-flight-info', async (req, res) => {
     }
   });
   
+  router.put('/update-flight-info', async (req, res) => {
+    try {
+      const { flight_infoarray } = req.body; // Expecting an array of flight info objects
+  
+      const updatePromises = flight_infoarray.map(async (flightInfo) => {
+        const { flight_num, ...updateData } = flightInfo;
+        const { data, error } = await supabase
+          .from('flight_info')
+          .update(updateData)
+          .eq('flight_num', flight_num);
+  
+        if (error) {
+          throw error;
+        }
+        return data;
+      });
+  
+      const results = await Promise.all(updatePromises);
+      res.status(200).json({ message: 'Flight_info updated successfully' });
+    } catch (error) {
+      console.error('Error updating flight information:', error.message);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+  
+
+
   
 
   function getRandomaircraft(aircrafts) {
