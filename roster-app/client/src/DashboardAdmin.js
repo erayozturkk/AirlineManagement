@@ -36,7 +36,6 @@ const DashboardAdmin = () => {
                     destination_city: destinationCity
                 }
             });
-            console.log('Response:', response.data);
 
             const flights = response.data.map(flight => ({
                 ...flight,

@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import { useUser } from './UserContext';
 import './LogIn.css';
 
 const LoginPage = () => {
@@ -28,8 +27,10 @@ const LoginPage = () => {
             const body = JSON.stringify({ username, password });
             const loginResponse = await axios.post('http://localhost:5001/auth/login', body, config);
             if (loginResponse.status === 200) {
-                console.log('Login successful:', loginResponse.data);
-                localStorage.setItem('token', loginResponse.data.token);
+                const { message, token, userDetails } = loginResponse.data;
+                console.log(userDetails);
+                console.log(message);
+                localStorage.setItem('token', token);
                 navigate('/dashboard');
             }
         } catch (err) {
