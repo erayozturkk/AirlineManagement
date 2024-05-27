@@ -57,6 +57,7 @@ module.exports = function createMainSystemRouter(supabaseKey) {
       const R_date = flightInfo['date'];
       const R_time = flightInfo['time'];
       const R_duration = flightInfo['duration'];
+      const shared_flight_number = flightInfo['shared_flight_number'];
       //fetch seating plan
       const{ data: aircrafts, error: aircraftError } = await supabase
       .from('aircrafts')
@@ -73,7 +74,10 @@ module.exports = function createMainSystemRouter(supabaseKey) {
       const LayoutE=seatingPlan["economy"].layout;
       const seatsPerRowB = LayoutB.split('-').reduce((total, num) => total + parseInt(num), 0);
       const seatsPerRowE = LayoutE.split('-').reduce((total, num) => total + parseInt(num), 0);
-      const businessmax= seatingPlan["business"].rows*(seatingPlan['business'].layout.split('-').reduce((total, num) => total + parseInt(num), 0));
+      let businessmax= seatingPlan["business"].rows*(seatingPlan['business'].layout.split('-').reduce((total, num) => total + parseInt(num), 0));
+      if(isNaN(businessmax)){
+        businessmax=0;
+      }
 
       // Fetch flight crew information
       const flightCrewids = (await selectCrew(vtype,range,R_date,R_time,R_duration)).map(crew => crew.id);
@@ -86,10 +90,20 @@ module.exports = function createMainSystemRouter(supabaseKey) {
         params: { flightnum: flight_num },
         headers: { 'Content-Type': 'application/json' }
       });
+      const passengersResponse2 = await axios.get('http://localhost:5001/passenger-info/get-passengers', {
+        params: { flightnum: shared_flight_number },
+        headers: { 'Content-Type': 'application/json' }
+      });
       
+      
+
       const passengers = passengersResponse.data;
-      const passengerids = passengersResponse.data.map(passenger => passenger.id);
-      const occupiedseats = passengersResponse.data
+      for(let psgr of passengersResponse2.data){
+        passengers.push(psgr);
+      }
+      
+      const passengerids = passengers.map(passenger => passenger.id);
+      const occupiedseats = passengers
       .filter(passenger => passenger.seatnumber !== null)
       .map(passenger => passenger.seatnumber);
 
@@ -99,6 +113,7 @@ module.exports = function createMainSystemRouter(supabaseKey) {
       for(let i= 0;i<passengers.length;i++){
         let changed=false;
         let passenger = passengers[i];
+        
         if(passenger.parentid){break}
         if(!passenger.seatnumber){
           
