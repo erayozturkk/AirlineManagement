@@ -20,12 +20,12 @@ body.dashboard-page {
     width: auto;
     height: auto;
     margin-bottom: 8%;
-    margin-top: -5%;
+    margin-top: -15%;
 }
 
 .dashboard-navbar .header {
     flex-grow: 1;
-    text-align: match-parent;
+    margin: auto;
 }
 
 .nav-item:hover {

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useLocation, Link } from 'react-router-dom';
+import { useLocation, Link, useNavigate } from 'react-router-dom';
 import SeatMap from './SeatMap';
 import ExtendedView from './ExtendedView';
 import TabularView from './TabularView';
@@ -63,7 +63,7 @@ const ViewFlight = () => {
                 </div>
                 <h1 className='header'>Flight Details</h1>
                 <div className="right-section">
-                    <Link to="/login" className='nav-item-logout'>Sign Out</Link>
+                    <a href="/login" onClick={logout} className='nav-item-logout'>Sign Out</a>
                     <Link to="/settings" className='nav-item'>Settings</Link>
                 </div>
             </nav>

@@ -3,12 +3,13 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './SettingsPage.css';
-import Navbar from './Navbar';
+import { Link } from 'react-router-dom';
+
 
 const SettingsPage = () => {
     const [userData, setUserData] = useState({
-        username: 'currentUsername', // Replace with actual data from your state or props
-        email: 'user@example.com', // Replace with actual data from your state or props
+        username: '', // Replace with actual data from your state or props
+        email: '', // Replace with actual data from your state or props
         currentPassword: '',
         newPassword: '',
         confirmNewPassword: '',
@@ -70,13 +71,30 @@ const SettingsPage = () => {
         }
     };
 
+    const logout = () => {
+        localStorage.removeItem('token');
+        navigate('/login');
+    };
+
+
     return (
         <div className='container-fluid p-0'>
-            <Navbar />
+            <nav className='viewflight-navbar'>
+                <div className="left-section">
+                    <Link to="/dashboard">
+                        <img src="./logowhite.png" alt="Logo" className="logo" />
+                    </Link>
+                </div>
+                <h1 className='header'>Settings</h1>
+                <div className="right-section">
+                    <a href="/login" onClick={logout} className='nav-item-logout'>Sign Out</a>
+                    <Link to="/settings" className='nav-item'>Settings</Link>
+                </div>
+            </nav>
             <div className='container mt-5'>
                 <div className='card'>
                     <div className='card-body'>
-                        <h2 className='card-title'>Settings</h2>
+                        <h2 className='card-title'>Change Password</h2>
                         <form onSubmit={handleSubmit}>
                             <div className='form-group'>
                                 <label htmlFor='username'>Username</label>
@@ -147,7 +165,7 @@ const SettingsPage = () => {
                                     placeholder='Confirm your new password'
                                 />
                             </div>
-                            <button type='submit' className='btn btn-primary'>Update Profile</button>
+                            <button type='submit' className='btn-primary'>Update Profile</button>
                         </form>
                     </div>
                 </div>
