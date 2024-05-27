@@ -13,6 +13,7 @@ const ViewFlight = () => {
     const [flight, setFlight] = useState(flightDetails || {}); // Initialize with flightDetails if available
     const [flightRoster, setFlightRoster] = useState(null); // State for flight_roster
     const [currentView, setCurrentView] = useState('plane'); // Default view is 'plane'
+    
 
     useEffect(() => {
         if (flightDetails) {
@@ -59,6 +60,10 @@ const ViewFlight = () => {
         navigate('/login');
     };
 
+    if (!flight.shared_flight_number){
+        flight.shared_flight_number='-';
+    }
+
     return (
         <div className="view-flight-page">
             <nav className='viewflight-navbar'>
@@ -76,6 +81,7 @@ const ViewFlight = () => {
             {flight && flight.flight_num && (
                 <div className='flight-details'>
                     <p><strong>Flight Number:</strong> {flight.flight_num}</p>
+                    <p><strong>Shared Flight Number:</strong> {flight.shared_flight_number}</p>
                     <p><strong>Date:</strong> {flight.date}</p>
                     <p><strong>Time: </strong>{flight.time}</p>
                     <p><strong>Origin Airport:</strong> {flight.origin_airport_name}</p>
@@ -84,6 +90,8 @@ const ViewFlight = () => {
                     <p><strong>Destination Airport Code:</strong> {flight.destination_airport_code}</p>
                     <p><strong>Distance:</strong> {flight.distance} KM</p>
                     <p><strong>Vehicle:</strong> {flight.vehicle_type}</p>
+                    
+
                 </div>
             )}
             <div className='view-flight-container'>

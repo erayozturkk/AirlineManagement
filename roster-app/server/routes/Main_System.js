@@ -260,6 +260,7 @@ module.exports = function createMainSystemRouter(supabaseKey) {
       console.log('Flight Details Get extended view:', flight_details);
 
       const flightInfo = flight_details;
+      const shared_num = flightInfo.shared_flight_number;
       const flight_num = flightInfo.flight_num;
       const vtype = flightInfo.vehicle_type;
 
@@ -303,7 +304,13 @@ module.exports = function createMainSystemRouter(supabaseKey) {
         headers: { 'Content-Type': 'application/json' }
       });
       const passengers = passengersResponse.data;
-
+      const passengersResponse2 = await axios.get('http://localhost:5001/passenger-info/get-passengers', {
+        params: { flightnum: shared_num }, // Use flightnum to match server-side parameter
+        headers: { 'Content-Type': 'application/json' }
+      });  
+      for(let psgr of passengersResponse2.data){
+        passengers.push(psgr);
+      }
 
       // Combine all data
       const flightRoster = {
