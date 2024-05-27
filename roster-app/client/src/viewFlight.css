@@ -11,18 +11,6 @@ body.view-flight-page {
     padding: 20px;
 }
 
-.viewflight-navbar {
-    margin: 20px;
-    display: flex;
-    background-color: #333;
-    color: white;
-    padding: 10px 25px;
-    align-items: center;
-    border-radius: 10px;
-    justify-content: space-between;
-    font-family: Arial, sans-serif; 
-}
-
 .viewflight-navbar .left-section {
     display: flex;
     align-items: center;

@@ -4,7 +4,6 @@ import { useNavigate } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './SettingsPage.css';
 import { Link } from 'react-router-dom';
-import {credentials} from './LogIn.js'
 
 
 const SettingsPage = () => {
@@ -72,6 +71,12 @@ const SettingsPage = () => {
         }
     };
 
+    const logout = () => {
+        localStorage.removeItem('token');
+        navigate('/login');
+    };
+
+
     return (
         <div className='container-fluid p-0'>
             <nav className='viewflight-navbar'>
@@ -82,7 +87,7 @@ const SettingsPage = () => {
                 </div>
                 <h1 className='header'>Settings</h1>
                 <div className="right-section">
-                    <Link to="/login" className='nav-item-logout'>Sign Out</Link>
+                    <a href="/login" onClick={logout} className='nav-item-logout'>Sign Out</a>
                     <Link to="/settings" className='nav-item'>Settings</Link>
                 </div>
             </nav>
