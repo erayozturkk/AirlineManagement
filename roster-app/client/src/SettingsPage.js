@@ -1,15 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './SettingsPage.css';
 import { Link } from 'react-router-dom';
 
-
 const SettingsPage = () => {
     const [userData, setUserData] = useState({
-        username: '', // Replace with actual data from your state or props
-        email: '', // Replace with actual data from your state or props
+        username: '',
+        email: '',
         currentPassword: '',
         newPassword: '',
         confirmNewPassword: '',
@@ -21,8 +20,31 @@ const SettingsPage = () => {
         specialChar: false,
     });
 
-    const { username, email, currentPassword, newPassword, confirmNewPassword } = userData;
     const navigate = useNavigate();
+
+    // Fetch user details on component mount
+    useEffect(() => {
+        const fetchUserDetails = async () => {
+            try {
+                const token = localStorage.getItem('token');
+                const config = {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                };
+                const response = await axios.get('http://localhost:5001/auth/user', config);
+                setUserData({
+                    ...userData,
+                    username: response.data.username,
+                    email: response.data.email,
+                });
+            } catch (err) {
+                console.error('Error fetching user details:', err);
+            }
+        };
+
+        fetchUserDetails();
+    }, []);
 
     const validatePassword = (password) => {
         const length = password.length >= 8 && password.length <= 16;
@@ -38,7 +60,7 @@ const SettingsPage = () => {
             validatePassword(e.target.value);
         }
         if (e.target.name === 'confirmNewPassword') {
-            if (e.target.value !== newPassword) {
+            if (e.target.value !== userData.newPassword) {
                 e.target.setCustomValidity("Passwords don't match!");
             } else {
                 e.target.setCustomValidity('');
@@ -48,17 +70,22 @@ const SettingsPage = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if (newPassword !== confirmNewPassword) {
+        if (userData.newPassword !== userData.confirmNewPassword) {
             alert("Passwords don't match! Please try again.");
             return;
         }
         try {
+            const token = localStorage.getItem('token');
             const config = {
                 headers: {
                     'Content-Type': 'application/json',
+                    Authorization: `Bearer ${token}`,
                 },
             };
-            const body = JSON.stringify({ currentPassword, newPassword });
+            const body = JSON.stringify({
+                currentPassword: userData.currentPassword,
+                newPassword: userData.newPassword,
+            });
             const response = await axios.post('http://localhost:5001/auth/update-password', body, config);
 
             if (response.status === 200) {
@@ -75,7 +102,6 @@ const SettingsPage = () => {
         localStorage.removeItem('token');
         navigate('/login');
     };
-
 
     return (
         <div className='container-fluid p-0'>
@@ -103,7 +129,7 @@ const SettingsPage = () => {
                                     className='form-control'
                                     id='username'
                                     name='username'
-                                    value={username}
+                                    value={userData.username}
                                     readOnly
                                 />
                             </div>
@@ -114,7 +140,7 @@ const SettingsPage = () => {
                                     className='form-control'
                                     id='email'
                                     name='email'
-                                    value={email}
+                                    value={userData.email}
                                     readOnly
                                 />
                             </div>
@@ -125,7 +151,7 @@ const SettingsPage = () => {
                                     className='form-control'
                                     id='currentPassword'
                                     name='currentPassword'
-                                    value={currentPassword}
+                                    value={userData.currentPassword}
                                     onChange={handleChange}
                                     placeholder='Enter your current password'
                                 />
@@ -137,7 +163,7 @@ const SettingsPage = () => {
                                     className='form-control'
                                     id='newPassword'
                                     name='newPassword'
-                                    value={newPassword}
+                                    value={userData.newPassword}
                                     onChange={handleChange}
                                     placeholder='Enter your new password'
                                 />
@@ -160,7 +186,7 @@ const SettingsPage = () => {
                                     className='form-control'
                                     id='confirmNewPassword'
                                     name='confirmNewPassword'
-                                    value={confirmNewPassword}
+                                    value={userData.confirmNewPassword}
                                     onChange={handleChange}
                                     placeholder='Confirm your new password'
                                 />

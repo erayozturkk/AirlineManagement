@@ -100,4 +100,79 @@ const login = async (req, res) => {
     }
 };
 
-module.exports = { register, login };
+// Update Password
+const updatePassword = async (req, res) => {
+    const { currentPassword, newPassword } = req.body;
+
+    try {
+        // Extract user ID from JWT
+        const token = req.headers.authorization.split(' ')[1];
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const userId = decoded.id;
+
+        // Fetch the user based on user ID
+        const { data: user, error } = await supabase
+            .from('useraccounts')
+            .select('*')
+            .eq('userid', userId)
+            .single();
+
+        if (error || !user) {
+            console.error('Error fetching user:', error ? error.message : 'User not found');
+            return res.status(400).json({ message: 'User not found' });
+        }
+
+        // Validate current password
+        const isMatch = await bcrypt.compare(currentPassword, user.passwordhash);
+        if (!isMatch) {
+            return res.status(400).json({ message: 'Current password is incorrect' });
+        }
+
+        // Hash the new password
+        const saltRounds = 10;
+        const newPasswordHash = await bcrypt.hash(newPassword, saltRounds);
+
+        // Update the password in the database
+        const { data, updateError } = await supabase
+            .from('useraccounts')
+            .update({ passwordhash: newPasswordHash })
+            .eq('userid', userId);
+
+        if (updateError) {
+            console.error('Error updating password:', updateError.message);
+            throw updateError;
+        }
+
+        res.status(200).json({ message: 'Password updated successfully' });
+    } catch (err) {
+        console.error('Update password error:', err.message);
+        res.status(500).json({ message: err.message });
+    }
+};
+
+// Fetch user details
+const getUserDetails = async (req, res) => {
+    try {
+        const token = req.headers.authorization.split(' ')[1];
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const userId = decoded.id;
+
+        const { data: user, error } = await supabase
+            .from('useraccounts')
+            .select('username, email')
+            .eq('userid', userId)
+            .single();
+
+        if (error || !user) {
+            console.error('Error fetching user details:', error ? error.message : 'User not found');
+            return res.status(400).json({ message: 'User not found' });
+        }
+
+        res.status(200).json({ username: user.username, email: user.email });
+    } catch (err) {
+        console.error('Error fetching user details:', err.message);
+        res.status(500).json({ message: err.message });
+    }
+};
+
+module.exports = { register, login, updatePassword, getUserDetails };
