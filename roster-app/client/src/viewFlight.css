@@ -12,6 +12,7 @@ body.view-flight-page {
 }
 
 .viewflight-navbar {
+    margin: 20px;
     display: flex;
     background-color: #333;
     color: white;
@@ -19,7 +20,7 @@ body.view-flight-page {
     align-items: center;
     border-radius: 10px;
     justify-content: space-between;
-    font-family: Arial, sans-serif; /* Match the font style */
+    font-family: Arial, sans-serif; 
 }
 
 .viewflight-navbar .left-section {
@@ -33,7 +34,7 @@ body.view-flight-page {
     width: auto;
     height: auto;
     margin-bottom: 8%;
-    margin-top: -5%;
+    margin-top: -15%;
 }
 
 .viewflight-navbar .nav-item,
@@ -58,7 +59,7 @@ body.view-flight-page {
 
 .viewflight-navbar .header {
     flex-grow: 1;
-    text-align: match-parent;
+    margin: auto;
 }
 
 .right-section {

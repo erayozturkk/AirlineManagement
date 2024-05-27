@@ -25,3 +25,68 @@
 .form-group label {
     font-weight: bold;
 }
+
+.card-body .btn-primary {
+    margin-top: 5px;
+    border-radius: 5px;
+}
+
+.card-body .btn-primary:hover {
+    color: #333;
+}
+
+.viewflight-navbar {
+    margin: 20px;
+    display: flex;
+    background-color: #333;
+    color: white;
+    padding: 10px 25px;
+    align-items: center;
+    border-radius: 10px;
+    justify-content: space-between;
+    font-family: Arial, sans-serif; 
+}
+
+.viewflight-navbar .left-section {
+    display: flex;
+    align-items: center;
+}
+
+.viewflight-navbar .logo {
+    margin-right: 20px;
+    max-width: 50px;
+    width: auto;
+    height: auto;
+    margin-bottom: 8%;
+    margin-top: -15%;
+}
+
+.viewflight-navbar .nav-item,
+.viewflight-navbar .nav-item-logout {
+    color: #333;
+    text-decoration: none;
+    padding: 10px 15px;
+    margin: 0 5px;
+    background-color: white;
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
+}
+
+.viewflight-navbar .nav-item-logout:hover,
+.viewflight-navbar .nav-item:hover {
+    background-color: #555;
+    color: white;
+}
+
+.viewflight-navbar .header {
+    flex-grow: 1;
+    margin: auto;
+}
+
+.right-section {
+    display: flex;
+    align-items: center;
+}
