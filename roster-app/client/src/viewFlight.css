@@ -1,0 +1,120 @@
+.view-flight-page {
+    color: #333;
+    text-decoration: none;
+    padding: 10px 15px;
+    background-color: white;
+    border-radius: 5px;
+}
+
+body.view-flight-page {
+    font-family: Arial, sans-serif;
+    padding: 20px;
+}
+
+.viewflight-navbar .left-section {
+    display: flex;
+    align-items: center;
+}
+
+.viewflight-navbar .logo {
+    margin-right: 20px;
+    max-width: 50px;
+    width: auto;
+    height: auto;
+    margin-bottom: 8%;
+    margin-top: -15%;
+}
+
+.viewflight-navbar .nav-item,
+.viewflight-navbar .nav-item-logout {
+    color: #333;
+    text-decoration: none;
+    padding: 10px 15px;
+    margin: 0 5px;
+    background-color: white;
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
+}
+
+.viewflight-navbar .nav-item-logout:hover,
+.viewflight-navbar .nav-item:hover {
+    background-color: #555;
+    color: white;
+}
+
+.viewflight-navbar .header {
+    flex-grow: 1;
+    margin: auto;
+}
+
+.right-section {
+    display: flex;
+    align-items: center;
+}
+
+.flight-details {
+    margin-top: 10px;
+    margin-bottom: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-family: Arial;
+    border: 1px solid #717171;
+    border-radius: 10px;
+}
+
+.flight-details p {
+    font-size: 20px;
+    margin: 10px;
+}
+
+.view-buttons button {
+    padding: 10px 20px;
+    background-color: #333;
+    color: white;
+    border: none;
+    cursor: pointer;
+    border-radius: 5px;
+    display: inline-block;
+    margin: 20px;
+}
+
+.view-flight-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    border: 1px solid #717171;
+    border-radius: 10px;
+}
+
+.flight-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+    font-size: 18px;
+    text-align: left;
+}
+
+.flight-table th, .flight-table td {
+    padding: 12px 15px;
+    border: 1px solid #ddd;
+}
+
+.flight-table th {
+    background-color: #333;
+    color: white;
+}
+
+.flight-table tr:nth-of-type(even) {
+    background-color: #f3f3f3;
+}
+
+.flight-table tr:nth-of-type(odd) {
+    background-color: #fff;
+}
+
+
+
