@@ -81,7 +81,6 @@ module.exports = function createMainSystemRouter(supabaseKey) {
       let cabincrewdata = await selectCabinCrew(varr,R_date,R_time,R_duration);
       const cabinCrewids = cabincrewdata[0].map(crew => crew.id),
             flightMenu = cabincrewdata[1];
-     
       // Fetch passengers information
       const passengersResponse = await axios.get('http://localhost:5001/passenger-info/get-passengers', {
         params: { flightnum: flight_num },
@@ -94,7 +93,9 @@ module.exports = function createMainSystemRouter(supabaseKey) {
       .filter(passenger => passenger.seatnumber !== null)
       .map(passenger => passenger.seatnumber);
 
-
+      let B =0;
+      let E =0;
+      const passengerarray = [] ;
       for(let i= 0;i<passengers.length;i++){
         let changed=false;
         let passenger = passengers[i];
@@ -145,9 +146,10 @@ module.exports = function createMainSystemRouter(supabaseKey) {
         if(!changed){
           
           if(passenger.seattype=='business'){
-            for(let i=0;i<=businessmax;i++){
+            for(let i=B;i<=businessmax;i++){
               let char = String.fromCharCode(i%seatsPerRowB+65);
               let row = ((i-(i%seatsPerRowB))/seatsPerRowB)+1;
+              B++;
               if(!occupiedseats.includes(row+char)){
                 passenger.seatnumber=row+char;
                 break
@@ -155,9 +157,10 @@ module.exports = function createMainSystemRouter(supabaseKey) {
             }
           }
           if(passenger.seattype==['economy']){
-            for(let i=businessmax;i<=max_seats;i++){
+            for(let i=businessmax+E;i<=max_seats;i++){
               let char = String.fromCharCode((i-businessmax)%seatsPerRowE+65);
               let row = (((i-businessmax)-(i-businessmax)%seatsPerRowE)/seatsPerRowE)+seatingPlan["business"].rows+1;
+              E++;
               if(!occupiedseats.includes(row+char)){
                 passenger.seatnumber=row+char;
                 break
@@ -167,14 +170,13 @@ module.exports = function createMainSystemRouter(supabaseKey) {
         }
       }
         occupiedseats.push(passenger.seatnumber);
-        const passengerarray = [] ;
         passengerarray.push(passenger);
-        const UpdatedPassengerResponse = await axios.put('http://localhost:5001/passenger-info/update-passengers', 
-        { passengerarray }, {
-        headers: { 'Content-Type': 'application/json' }
-        });
+
       }
-      
+      const UpdatedPassengerResponse = await axios.put('http://localhost:5001/passenger-info/update-passengers', 
+      { passengerarray }, {
+      headers: { 'Content-Type': 'application/json' }
+      });
        // Fetch the last roster_id
        const { data: lastCrewMember, error: lastCrewMemberError } = await supabase
        .from('flightrosters')
