@@ -7,6 +7,7 @@ import axios from 'axios';
 import './viewFlight.css';
 
 const ViewFlight = () => {
+    const navigate = useNavigate();
     const location = useLocation();
     const { flightDetails } = location.state || {}; // Add a fallback for location.state
     const [flight, setFlight] = useState(flightDetails || {}); // Initialize with flightDetails if available
@@ -51,6 +52,11 @@ const ViewFlight = () => {
 
         document.body.removeChild(link);
         URL.revokeObjectURL(href);
+    };
+
+    const logout = () => {
+        localStorage.removeItem('token');
+        navigate('/login');
     };
 
     return (
