@@ -13,7 +13,6 @@ const ViewFlight = () => {
     const [flightRoster, setFlightRoster] = useState(null); // State for flight_roster
     const [currentView, setCurrentView] = useState('plane'); // Default view is 'plane'
 
-
     useEffect(() => {
         if (flightDetails) {
             setFlight(flightDetails);
@@ -33,6 +32,26 @@ const ViewFlight = () => {
         };
         fetchSeatingPlan();
     }, [flightDetails]);
+
+    const exportFlightRosterAsJson = () => {
+        if (!flightRoster) {
+            console.error('No flight roster available to export.');
+            return;
+        }
+        const fileName = `flight_roster_${flight.flight_num}.json`;
+        const json = JSON.stringify(flightRoster, null, 2);
+        const blob = new Blob([json], { type: 'application/json' });
+        const href = URL.createObjectURL(blob);
+
+        const link = document.createElement('a');
+        link.href = href;
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+
+        document.body.removeChild(link);
+        URL.revokeObjectURL(href);
+    };
 
     return (
         <div className="view-flight-page">
@@ -59,7 +78,6 @@ const ViewFlight = () => {
                     <p><strong>Destination Airport Code:</strong> {flight.destination_airport_code}</p>
                     <p><strong>Distance:</strong> {flight.distance} KM</p>
                     <p><strong>Vehicle:</strong> {flight.vehicle_type}</p>
-
                 </div>
             )}
             <div className='view-flight-container'>
@@ -67,6 +85,7 @@ const ViewFlight = () => {
                     <button onClick={() => setCurrentView('plane')}>Plane Map View</button>
                     <button onClick={() => setCurrentView('tabular')}>Tabular View</button>
                     <button onClick={() => setCurrentView('extended')}>Extended View</button>
+                    <button onClick={exportFlightRosterAsJson}>Export as JSON</button>
                 </div>
 
                 {flight && currentView === 'plane' && flightRoster && (
@@ -84,7 +103,6 @@ const ViewFlight = () => {
 
                 {flight && currentView === 'extended' && (
                     <>
-
                         <ExtendedView flightRoster={flightRoster} />
                     </>
                 )}

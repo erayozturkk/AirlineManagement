@@ -35,6 +35,7 @@ const LoginPage = () => {
             }
         } catch (err) {
             console.error("Login error:", err.response.data);
+            alert(err.response.data.message);
         }
     };
 
